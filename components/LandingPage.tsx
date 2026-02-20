@@ -239,7 +239,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ isOpen, onClose, isPre
                     <p className="text-slate-400 text-lg max-w-xl mx-auto">Full-length roleplays, mic licking, and deep relaxation videos — new releases every week.</p>
                     <div className="w-full aspect-video rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
                         <iframe width="100%" height="100%"
-                            src="https://www.youtube.com/embed?listType=user_uploads&list=ASMRwithMAPA"
+                            src="https://www.youtube.com/embed/drs2YjPTht4"
                             title="ASMR with MAPA" frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen />
