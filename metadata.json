@@ -1,0 +1,7 @@
+{
+  "name": "ASMR with MAPA",
+  "description": "A premium ASMR experience featuring curated sounds, rain layers, night mode, and exclusive merchandise.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
