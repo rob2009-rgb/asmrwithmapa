@@ -9,6 +9,7 @@ import path from 'path';
  */
 export default defineConfig({
     root: 'landing',
+    publicDir: '../public',
     plugins: [react()],
     resolve: {
         alias: {
