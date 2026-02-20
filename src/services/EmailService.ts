@@ -10,38 +10,35 @@ export interface EmailOptions {
 }
 
 /**
- * Service to handle transactional emails.
- * Currently simulates sending by logging to console.
- * Future integration: Replace console.log with Resend/SendGrid API call.
+ * Service to handle transactional emails via Resend.
+ * Calls the `send-email` Supabase Edge Function, which reads the
+ * Resend API key from system_settings (Admin → Settings → Resend API Key).
  */
 export const EmailService = {
-    /**
-     * Send a generic email
-     */
     sendEmail: async (options: EmailOptions): Promise<boolean> => {
-        console.group('📧 Sending Email (Simulation)');
-        console.log('To:', options.to);
-        console.log('Subject:', options.subject);
-        console.log('Body:', options.body);
-        if (options.templateName) {
-            console.log('Template:', options.templateName);
-            console.log('Variables:', options.variables);
+        try {
+            const { error, data } = await supabase.functions.invoke('send-email', {
+                body: {
+                    to: options.to,
+                    subject: options.subject,
+                    body: options.body,
+                },
+            });
+
+            if (error) {
+                console.error('EmailService error:', error);
+                return false;
+            }
+
+            console.log('✅ Email sent:', data?.id ?? 'ok');
+            return true;
+        } catch (err) {
+            console.error('EmailService exception:', err);
+            return false;
         }
-        console.groupEnd();
-
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // TODO: Integrate with real provider (e.g., Supabase Edge Function -> Resend)
-        // const { error } = await supabase.functions.invoke('send-email', { body: options });
-        // if (error) return false;
-
-        return true;
     },
 
-    /**
-     * Send "Ticket Created" confirmation
-     */
+    /** Send "Ticket Created" confirmation */
     sendTicketCreated: async (email: string, userName: string, ticketId: string, subject: string) => {
         return EmailService.sendEmail({
             to: email,
@@ -52,14 +49,10 @@ export const EmailService = {
                 <p>A member of our team will review it shortly.</p>
                 <p>You can view your ticket status in the <a href="/support">Support Center</a>.</p>
             `,
-            templateName: 'Ticket Received',
-            variables: { name: userName, ticket_id: ticketId, subject }
         });
     },
 
-    /**
-     * Send "New Reply" notification
-     */
+    /** Send "New Reply" notification */
     sendTicketReply: async (email: string, userName: string, ticketId: string, subject: string, replyMessage: string) => {
         return EmailService.sendEmail({
             to: email,
@@ -71,14 +64,10 @@ export const EmailService = {
                 <blockquote>${replyMessage}</blockquote>
                 <p>Please visit the <a href="/support">Support Center</a> to respond.</p>
             `,
-            templateName: 'New Support Reply',
-            variables: { name: userName, ticket_id: ticketId, subject, latest_reply: replyMessage }
         });
     },
 
-    /**
-     * Send "Ticket Closed" notification
-     */
+    /** Send "Ticket Closed" notification */
     sendTicketClosed: async (email: string, userName: string, ticketId: string, subject: string) => {
         return EmailService.sendEmail({
             to: email,
@@ -90,8 +79,6 @@ export const EmailService = {
                 <p>If you have further questions, please open a new ticket.</p>
                 <p>Thank you for being part of our community.</p>
             `,
-            templateName: 'Ticket Closed',
-            variables: { name: userName, ticket_id: ticketId, subject }
         });
     }
 };

@@ -1,32 +1,60 @@
 /**
- * Shared email submission utility for the landing page.
+ * Landing page subscriber submission.
  *
- * At build time, Vite replaces `import.meta.env.*` with actual values.
- * - In the standalone landing build (IONOS), VITE_LANDING_SUPABASE_URL is set
- *   → uses the dedicated landing Supabase project
- * - In the main app (no VITE_LANDING_SUPABASE_URL), falls back to a stub
- *   that the in-app LandingPage overrides via props.
+ * Calls the `landing-subscribe` Supabase Edge Function via plain fetch().
+ * This avoids importing the Supabase client into the landing bundle
+ * (which would throw "Missing Supabase URL or Anon Key" when those
+ *  env vars aren't present).
+ *
+ * Required Cloudflare Pages env vars:
+ *   VITE_SUPABASE_URL      — your Supabase project URL
+ *   VITE_SUPABASE_ANON_KEY — your Supabase anon/public key
  */
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const LANDING_URL = import.meta.env.VITE_LANDING_SUPABASE_URL as string | undefined;
-const LANDING_KEY = import.meta.env.VITE_LANDING_SUPABASE_ANON_KEY as string | undefined;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-// Create a dedicated client only when the env vars are present (landing build)
-export const landingDb = LANDING_URL && LANDING_KEY
-    ? createClient(LANDING_URL, LANDING_KEY)
-    : null;
+// Not used in signing up — kept for backwards compat with in-app preview
+export const landingDb = null;
 
-/** Insert/upsert a subscriber email. Throws on failure. */
+/**
+ * Submit a subscriber email.
+ *  - In the standalone landing build: calls the Edge Function (DB insert + Resend welcome email)
+ *  - Falls back to a direct DB insert if called from the in-app preview (db param provided)
+ */
 export async function submitSubscriber(
     email: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    db: SupabaseClient<any>,
+    db?: any | null,
     source = 'landing_page'
 ): Promise<void> {
-    const { error } = await db.from('subscribers').upsert(
-        { email, source, is_active: true },
-        { onConflict: 'email' }
-    );
-    if (error) throw error;
+    // In-app preview fallback: use the provided Supabase client directly
+    if (db) {
+        const { error } = await db.from('subscribers').upsert(
+            { email, source, is_active: true },
+            { onConflict: 'email' }
+        );
+        if (error) throw error;
+        return;
+    }
+
+    // Standalone landing build: call the Edge Function
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        throw new Error('VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set in Cloudflare Pages environment variables.');
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/landing-subscribe`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ email, source }),
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? `Subscription failed (${res.status})`);
+    }
 }

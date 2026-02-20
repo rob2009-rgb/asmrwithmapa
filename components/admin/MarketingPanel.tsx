@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Users, FileEdit, Send, Plus, Trash2, Save, Loader2, RefreshCw, Settings, Megaphone, Zap, ChevronRight } from 'lucide-react';
+import { Mail, Users, FileEdit, Send, Plus, Trash2, Save, Loader2, RefreshCw, Settings, Megaphone, Zap, Globe } from 'lucide-react';
 import { supabase } from '../../src/supabaseClient';
 import { Database } from '../../src/db_types';
 
@@ -10,6 +10,7 @@ type Template = Database['public']['Tables']['email_templates']['Row'];
 const NAV_TABS = [
     { id: 'campaigns', label: 'Campaigns', icon: <Megaphone size={15} /> },
     { id: 'subscribers', label: 'Subscribers', icon: <Users size={15} /> },
+    { id: 'waitlist', label: 'Waitlist', icon: <Globe size={15} /> },
     { id: 'templates', label: 'Templates', icon: <Mail size={15} /> },
     { id: 'flows', label: 'Automated Flows', icon: <Zap size={15} /> },
 ] as const;
@@ -23,6 +24,7 @@ const selectCls = 'w-full bg-slate-900 border border-slate-700 text-white rounde
 const MarketingPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<MarketingTab>('campaigns');
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+    const [waitlistSubscribers, setWaitlistSubscribers] = useState<Subscriber[]>([]);
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [flowSettings, setFlowSettings] = useState<Record<string, string>>({});
@@ -37,8 +39,11 @@ const MarketingPanel: React.FC = () => {
         setLoading(true);
         try {
             if (activeTab === 'subscribers') {
-                const { data } = await supabase.from('subscribers').select('*').order('created_at', { ascending: false });
+                const { data } = await supabase.from('subscribers').select('*').neq('source', 'landing_page').order('created_at', { ascending: false });
                 setSubscribers(data || []);
+            } else if (activeTab === 'waitlist') {
+                const { data } = await supabase.from('subscribers').select('*').eq('source', 'landing_page').order('created_at', { ascending: false });
+                setWaitlistSubscribers(data || []);
             } else if (activeTab === 'campaigns') {
                 const { data } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
                 setCampaigns(data || []);
@@ -308,6 +313,85 @@ const MarketingPanel: React.FC = () => {
                         </table>
                         {subscribers.length === 0 && (
                             <div className="py-12 text-center text-slate-600 text-sm">No subscribers yet.</div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── WAITLIST ── */}
+            {!loading && activeTab === 'waitlist' && (
+                <div className="space-y-5">
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-gradient-to-br from-pink-600/20 to-fuchsia-600/10 border border-pink-500/20 rounded-2xl p-5">
+                            <p className="text-pink-400 text-xs font-black uppercase tracking-widest mb-1">Total Signups</p>
+                            <p className="text-4xl font-black text-white">{waitlistSubscribers.length}</p>
+                        </div>
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                            <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Active</p>
+                            <p className="text-4xl font-black text-white">{waitlistSubscribers.filter(s => s.is_active).length}</p>
+                        </div>
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                            <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Latest Signup</p>
+                            <p className="text-lg font-black text-white">
+                                {waitlistSubscribers[0]
+                                    ? new Date(waitlistSubscribers[0].created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                                    : '—'
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg font-bold text-white">Landing Page Waitlist</h3>
+                            <p className="text-slate-500 text-xs mt-0.5">Signups from <code className="bg-slate-800 px-1.5 py-0.5 rounded text-pink-400">asmrwithmapa.com</code></p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                const csv = ['Email,Joined,Status', ...waitlistSubscribers.map(s =>
+                                    `${s.email},${new Date(s.created_at).toLocaleDateString()},${s.is_active ? 'Active' : 'Unsubscribed'}`
+                                )].join('\n');
+                                const a = document.createElement('a');
+                                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                                a.download = 'waitlist.csv';
+                                a.click();
+                            }}
+                            className="text-sm text-pink-400 font-bold hover:text-pink-300 transition-colors"
+                        >
+                            Export CSV
+                        </button>
+                    </div>
+
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                        <table className="min-w-full divide-y divide-slate-800">
+                            <thead className="bg-slate-950/60">
+                                <tr>
+                                    {['Email', 'Joined', 'Status'].map(h => (
+                                        <th key={h} className="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800">
+                                {waitlistSubscribers.map(s => (
+                                    <tr key={s.id} className="hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-5 py-3 text-sm font-medium text-white">{s.email}</td>
+                                        <td className="px-5 py-3 text-sm text-slate-400">{new Date(s.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                                        <td className="px-5 py-3">
+                                            <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${s.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                {s.is_active ? 'Active' : 'Unsubscribed'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {waitlistSubscribers.length === 0 && (
+                            <div className="py-16 text-center">
+                                <Globe size={32} className="mx-auto mb-3 text-slate-700" />
+                                <p className="text-slate-600 text-sm font-bold">No waitlist signups yet</p>
+                                <p className="text-slate-700 text-xs mt-1">Signups from the landing page will appear here</p>
+                            </div>
                         )}
                     </div>
                 </div>

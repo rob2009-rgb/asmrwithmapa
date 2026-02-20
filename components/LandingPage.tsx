@@ -13,15 +13,9 @@ import {
     Check, ChevronDown, Instagram, Youtube, Mail,
     ArrowRight, Music, Brain,
 } from 'lucide-react';
-import { landingDb, submitSubscriber } from '../landing/landingDb';
-import { supabase as appDb } from '../src/supabaseClient';
+import { submitSubscriber } from '../landing/landingDb';
 
-/**
- * Which Supabase instance to write to:
- *  - landingDb is non-null only in the standalone landing build (env vars present)
- *  - Falls back to the main app DB when used as an in-app preview
- */
-const activeDb = landingDb ?? appDb;
+// submitSubscriber handles the DB/Edge-Function routing internally
 
 /** URL of the existing IONOS-hosted website */
 const APP_URL = 'https://app.asmrwithmapa.com';
@@ -50,7 +44,7 @@ const EmailForm: React.FC<{ size?: 'hero' | 'normal' }> = ({ size = 'normal' }) 
         if (!trimmed) return;
         setStatus('loading');
         try {
-            await submitSubscriber(trimmed, activeDb);
+            await submitSubscriber(trimmed);
             setStatus('success');
             setMsg("You're on the list! 🎉");
             setEmail('');
