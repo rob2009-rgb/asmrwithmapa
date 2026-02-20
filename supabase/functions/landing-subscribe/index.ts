@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 /** Beautiful HTML welcome email for landing page waitlist signups */
-function buildWelcomeEmail(email: string): string {
+function buildWelcomeEmail(email: string, token: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,10 +96,17 @@ function buildWelcomeEmail(email: string): string {
             <!-- Social links -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr>
-                <td align="center" style="padding:20px;background:#020617;border-radius:14px;border:1px solid #1e293b;">
-                  <div style="font-size:12px;color:#475569;margin-bottom:10px;font-weight:600;">Follow along for BTS &amp; early sneak peeks</div>
-                  <a href="https://www.youtube.com/@asmrwithmapa" style="display:inline-block;margin:0 8px;background:#ef4444;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;">▶ YouTube</a>
-                  <a href="https://www.instagram.com/asmrwithmapa" style="display:inline-block;margin:0 8px;background:linear-gradient(135deg,#f43f5e,#ec4899,#a855f7);color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;">📷 Instagram</a>
+                <td align="center" style="padding:24px;background:#020617;border-radius:20px;border:1px solid #1e293b;">
+                  <div style="font-size:12px;color:#475569;margin-bottom:16px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Follow the journey</div>
+                  <div style="margin-bottom:12px;">
+                    <a href="https://www.youtube.com/@asmrwithmapa" style="display:inline-block;margin:4px;background:#ef4444;color:#fff;text-decoration:none;font-size:11px;font-weight:800;padding:10px 16px;border-radius:10px;">YOUTUBE</a>
+                    <a href="https://www.instagram.com/asmr.withmapa" style="display:inline-block;margin:4px;background:linear-gradient(135deg,#f43f5e,#ec4899,#a855f7);color:#fff;text-decoration:none;font-size:11px;font-weight:800;padding:10px 16px;border-radius:10px;">INSTAGRAM</a>
+                    <a href="https://www.tiktok.com/@asmr.with.mapa" style="display:inline-block;margin:4px;background:#000000;color:#fff;text-decoration:none;font-size:11px;font-weight:800;padding:10px 16px;border-radius:10px;border:1px solid #334155;">TIKTOK</a>
+                  </div>
+                  <div>
+                    <a href="https://facebook.com/share/19eNaHbtfR/?mibextid=wwXIfr" style="display:inline-block;margin:4px;background:#1877f2;color:#fff;text-decoration:none;font-size:11px;font-weight:800;padding:10px 16px;border-radius:10px;">FACEBOOK</a>
+                    <a href="https://www.patreon.com/ASMRwithMAPA" style="display:inline-block;margin:4px;background:#ff424d;color:#fff;text-decoration:none;font-size:11px;font-weight:800;padding:10px 16px;border-radius:10px;">PATREON</a>
+                  </div>
                 </td>
               </tr>
             </table>
@@ -119,8 +126,10 @@ function buildWelcomeEmail(email: string): string {
             <p style="margin:0 0 6px;font-size:11px;color:#334155;line-height:1.6;">
               You received this because you joined the waitlist at <strong style="color:#475569;">asmrwithmapa.com</strong>
             </p>
-            <p style="margin:0;font-size:11px;color:#1e293b;">
-              © ${new Date().getFullYear()} ASMR with MAPA. Made with 💜
+            <p style="margin:0;font-size:11px;color:#475569;">
+              <a href="https://asmrwithmapa.com/unsubscribe?token=${token}" style="color:#ec4899;text-decoration:none;font-weight:600;">Unsubscribe</a> 
+              &nbsp;•&nbsp; 
+              <a href="https://asmrwithmapa.com/privacy" style="color:#475569;text-decoration:none;">Privacy Policy</a>
             </p>
           </td>
         </tr>
@@ -144,7 +153,7 @@ const BLOCKED_DOMAINS = new Set([
   'fakeinbox.com', 'spamgourmet.com', 'getairmail.com',
 ]);
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -205,12 +214,21 @@ serve(async (req) => {
       }
     }
 
-    // ── 4. Upsert subscriber ──────────────────────────────────────────────
+    // ── 4. Upsert subscriber with GDPR tracking ──────────────────────────
     const cleanEmail = email.toLowerCase().trim();
+    const unsubscribeToken = crypto.randomUUID();
+
     const { error: subError } = await supabaseAdmin
       .from('subscribers')
       .upsert(
-        { email: cleanEmail, source: 'landing_page', is_active: true, signup_ip: clientIp },
+        {
+          email: cleanEmail,
+          source: 'landing_page',
+          is_active: true,
+          signup_ip: clientIp,
+          unsubscribe_token: unsubscribeToken,
+          consent_given_at: new Date().toISOString()
+        },
         { onConflict: 'email' }
       );
 
@@ -245,7 +263,7 @@ serve(async (req) => {
           from: 'MAPA ✨ <noreply@asmrwithmapa.com>',
           to: [cleanEmail],
           subject: "You're on the list, lovely! ✨ — ASMR with MAPA",
-          html: buildWelcomeEmail(cleanEmail),
+          html: buildWelcomeEmail(cleanEmail, unsubscribeToken),
         }),
       });
 

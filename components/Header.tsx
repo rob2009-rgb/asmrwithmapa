@@ -40,8 +40,8 @@ const Header: React.FC<HeaderProps> = ({
         {/* Left: Logo */}
         <div className="flex items-center gap-5">
           <div className="relative group cursor-pointer" onClick={onOpenAuth}>
-            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-fuchsia-500 to-rose-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
-            <div className="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-white shadow-xl bg-pink-100">
+            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-fuchsia-500 to-rose-600 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
+            <div className="relative w-11 h-11 rounded-full overflow-hidden border-2 border-white shadow-xl bg-pink-100">
               <img
                 src="/logo.jpg"
                 alt="MAPA Logo"

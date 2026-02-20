@@ -20,6 +20,11 @@ export default defineConfig({
         emptyOutDir: true,
         sourcemap: false,
         rollupOptions: {
+            input: {
+                main: path.resolve(__dirname, 'landing/index.html'),
+                privacy: path.resolve(__dirname, 'landing/privacy.html'),
+                unsubscribe: path.resolve(__dirname, 'landing/unsubscribe.html'),
+            },
             output: {
                 // Chunk splitting for better caching
                 manualChunks: {

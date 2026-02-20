@@ -6,11 +6,11 @@
  *
  * Website CTA links to: https://asmrwithmapa.co.uk
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     X, Sparkles, Moon, Users, Mic, Headphones, Wind,
     Check, ChevronDown, Instagram, Youtube, Mail,
-    ArrowRight, Music, Brain,
+    ArrowRight, Music, Brain, Settings, Facebook, Heart,
 } from 'lucide-react';
 import { submitSubscriber } from '../landing/landingDb';
 
@@ -77,39 +77,54 @@ const EmailForm: React.FC<{ size?: 'hero' | 'normal' }> = ({ size = 'normal' }) 
 
     const isHero = size === 'hero';
     return (
-        <div>
-            <form onSubmit={handleSubmit} className={`flex flex-col sm:flex-row gap-3 ${isHero ? 'max-w-xl mx-auto' : ''}`}>
-                {/* Honeypot — hidden from real users, bots fill it in */}
-                <input
-                    type="text"
-                    name="website"
-                    value={honeypot}
-                    onChange={e => setHoneypot(e.target.value)}
-                    tabIndex={-1}
-                    aria-hidden="true"
-                    autoComplete="off"
-                    style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
-                />
-                <input
-                    type="email" required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className={`flex-1 px-5 bg-white/5 border border-white/10 text-white rounded-2xl outline-none focus:border-pink-500 transition-colors placeholder:text-slate-500 ${isHero ? 'py-4 text-base' : 'py-3.5 text-sm'}`}
-                />
-                <button
-                    type="submit"
-                    disabled={status === 'loading'}
-                    className={`flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-bold rounded-2xl shadow-[0_8px_30px_rgba(236,72,153,0.3)] hover:shadow-[0_12px_40px_rgba(236,72,153,0.45)] hover:scale-105 active:scale-95 transition-all disabled:opacity-60 whitespace-nowrap ${isHero ? 'px-8 py-4' : 'px-6 py-3.5'}`}
-                >
-                    {status === 'loading'
-                        ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        : <><span>Keep Me Informed</span><ArrowRight size={16} /></>
-                    }
-                </button>
+        <div className="space-y-4">
+            <form onSubmit={handleSubmit} className={`flex flex-col gap-4 ${isHero ? 'max-w-xl mx-auto' : ''}`}>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Honeypot — hidden from real users, bots fill it in */}
+                    <input
+                        type="text"
+                        name="website"
+                        value={honeypot}
+                        onChange={e => setHoneypot(e.target.value)}
+                        tabIndex={-1}
+                        aria-hidden="true"
+                        autoComplete="off"
+                        style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+                    />
+                    <input
+                        type="email" required
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className={`flex-1 px-5 bg-white/5 border border-white/10 text-white rounded-2xl outline-none focus:border-pink-500 transition-colors placeholder:text-slate-500 ${isHero ? 'py-4 text-base' : 'py-3.5 text-sm'}`}
+                    />
+                    <button
+                        type="submit"
+                        disabled={status === 'loading'}
+                        className={`flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-bold rounded-2xl shadow-[0_8px_30px_rgba(236,72,153,0.3)] hover:shadow-[0_12px_40px_rgba(236,72,153,0.45)] hover:scale-105 active:scale-95 transition-all disabled:opacity-60 whitespace-nowrap ${isHero ? 'px-8 py-4' : 'px-6 py-3.5'}`}
+                    >
+                        {status === 'loading'
+                            ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            : <><span>Keep Me Informed</span><ArrowRight size={16} /></>
+                        }
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-3 px-1">
+                    <input
+                        id="consent"
+                        type="checkbox"
+                        required
+                        className="w-4 h-4 rounded border-white/10 bg-white/5 text-pink-600 focus:ring-pink-500/20 cursor-pointer"
+                    />
+                    <label htmlFor="consent" className="text-[11px] text-slate-500 leading-tight cursor-pointer">
+                        I agree to receive occasional updates about ASMR with MAPA.
+                        Read our <a href="/privacy" className="text-pink-500/70 hover:text-pink-400 underline transition-colors">Privacy Policy</a>.
+                    </label>
+                </div>
             </form>
             {status === 'error' && <p className="text-red-400 text-sm mt-2 text-center">{msg}</p>}
-            <p className="text-slate-600 text-xs mt-3 text-center">No spam. Unsubscribe any time.</p>
+            <p className="text-slate-600 text-[10px] mt-1 text-center opacity-50 italic">No spam. Unsubscribe any time.</p>
         </div>
     );
 };
@@ -123,35 +138,59 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ isOpen, onClose, isPreview = false }) => {
+    const [showCookieNotice, setShowCookieNotice] = useState(false);
+
+    useEffect(() => {
+        const dismissed = localStorage.getItem('cookie_notice_dismissed');
+        if (!dismissed) setShowCookieNotice(true);
+    }, []);
+
+    const dismissCookieNotice = () => {
+        localStorage.setItem('cookie_notice_dismissed', 'true');
+        setShowCookieNotice(false);
+    };
+
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-[500] bg-slate-950 text-white overflow-y-auto">
 
-            {/* In-app preview close button only */}
-            {isPreview && (
-                <button onClick={onClose} className="fixed top-5 right-5 z-[600] flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-all text-sm font-bold border border-white/10">
-                    <X size={16} /> Close Preview
-                </button>
-            )}
-
-            {/* Standalone nav bar — only shown on the deployed landing page */}
-            {!isPreview && (
-                <nav className="fixed top-0 inset-x-0 z-[600] flex items-center justify-between px-6 py-4 backdrop-blur-md bg-slate-950/70 border-b border-white/5">
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-500 to-fuchsia-600 flex items-center justify-center">
-                            <Music size={14} className="text-white" />
-                        </div>
-                        <span className="font-black text-white text-sm tracking-tight">ASMR with MAPA</span>
+            {/* Top Navigation Bar */}
+            <nav className="fixed top-0 inset-x-0 z-[600] flex items-center justify-between px-6 py-4 backdrop-blur-md bg-slate-950/70 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <img
+                            src="/logo.jpg"
+                            alt="MAPA Logo"
+                            className="w-10 h-10 rounded-full border border-white/10 shadow-lg shadow-pink-500/20 object-cover"
+                        />
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-500/10 to-transparent pointer-events-none" />
                     </div>
-                    <a
-                        href={APP_URL}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-pink-500/40 transition-all text-xs font-bold"
-                    >
-                        visit our website lovelies! <ArrowRight size={12} />
-                    </a>
-                </nav>
-            )}
+                    <div className="flex flex-col">
+                        <div className="flex items-baseline gap-1.5 leading-tight">
+                            <span className="font-serif font-black text-pink-500 text-xl tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ASMR</span>
+                            <span className="font-serif italic text-pink-400 text-sm italic" style={{ fontFamily: "'Playfair Display', serif" }}>with</span>
+                            <span className="font-serif font-black text-pink-500 text-xl tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>MAPA</span>
+                        </div>
+                        <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500 leading-none">The Sanctuary</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    {!isPreview ? (
+                        <a
+                            href={APP_URL}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-pink-500/40 transition-all text-xs font-bold"
+                        >
+                            visit our website lovelies! <ArrowRight size={12} />
+                        </a>
+                    ) : (
+                        <button onClick={onClose} className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white/70 hover:text-white hover:bg-white/20 transition-all text-sm font-bold border border-white/10">
+                            <X size={16} /> Close Preview
+                        </button>
+                    )}
+                </div>
+            </nav>
 
             {/* ── HERO ── */}
             {/* pt-20 gives space below the fixed nav when in standalone mode */}
@@ -302,24 +341,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({ isOpen, onClose, isPre
                 </div>
             </section>
 
+            {/* Cookie Notice */}
+            {showCookieNotice && (
+                <div className="fixed bottom-6 inset-x-6 z-[1000] flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-500">
+                    <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500">
+                            <Settings size={20} />
+                        </div>
+                        <div className="text-left">
+                            <p className="text-sm font-semibold text-white">Privacy & Cookies</p>
+                            <p className="text-xs text-slate-400">
+                                We use basic cookies to remember your preferences and Google Fonts for our aesthetic. No tracking, just relaxation.
+                                <a href="/privacy" className="ml-1 text-pink-500 hover:text-pink-400 underline underline-offset-2 transition-colors">Learn more.</a>
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={dismissCookieNotice}
+                        className="w-full sm:w-auto px-6 py-2.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-pink-600/20 active:scale-95"
+                    >
+                        Alright, let's go!
+                    </button>
+                </div>
+            )}
+
             {/* ── FOOTER ── */}
             <footer className="py-12 bg-slate-950 border-t border-slate-900 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-600 flex items-center justify-center">
-                            <Music size={18} className="text-white" />
+                        <div className="relative">
+                            <img
+                                src="/logo.jpg"
+                                alt="MAPA Logo"
+                                className="w-10 h-10 rounded-full border border-white/10 shadow-lg shadow-pink-500/20 object-cover"
+                            />
+                            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-500/10 to-transparent pointer-events-none" />
                         </div>
                         <div>
-                            <p className="font-black text-white text-sm">ASMR with MAPA</p>
-                            <p className="text-slate-500 text-xs">Your Sanctuary</p>
+                            <p className="font-brand font-black text-white text-sm tracking-tight">ASMR with MAPA</p>
+                            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-[0.2em] leading-none">The Sanctuary</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-6 text-slate-500 text-sm">
-                        <a href="https://www.youtube.com/@asmrwithmapa/videos" target="_blank" rel="noopener noreferrer" className="hover:text-red-400 transition-colors flex items-center gap-1.5">
-                            <Youtube size={16} /> YouTube
+                    <div className="flex items-center gap-4">
+                        <a href="https://www.youtube.com/@asmrwithmapa/videos" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-red-600 text-slate-400 hover:text-white rounded-xl transition-all shadow-lg active:scale-95" title="YouTube">
+                            <Youtube size={18} />
                         </a>
-                        <a href="https://www.instagram.com/asmrwithmapa" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors flex items-center gap-1.5">
-                            <Instagram size={16} /> Instagram
+                        <a href="https://www.instagram.com/asmr.withmapa" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-pink-600 text-slate-400 hover:text-white rounded-xl transition-all shadow-lg active:scale-95" title="Instagram">
+                            <Instagram size={18} />
+                        </a>
+                        <a href="https://www.tiktok.com/@asmr.with.mapa" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all shadow-lg active:scale-95" title="TikTok">
+                            <Music size={18} />
+                        </a>
+                        <a href="https://facebook.com/share/19eNaHbtfR/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-800 hover:bg-blue-600 text-slate-400 hover:text-white rounded-xl transition-all shadow-lg active:scale-95" title="Facebook">
+                            <Facebook size={18} />
+                        </a>
+                        <a href="https://www.patreon.com/ASMRwithMAPA" target="_blank" rel="noopener noreferrer" className="p-2 bg-pink-600/10 hover:bg-pink-600 text-pink-500 hover:text-white rounded-xl border border-pink-500/20 transition-all shadow-lg active:scale-95" title="Support on Patreon">
+                            <Heart size={18} />
                         </a>
                     </div>
                     <div className="text-slate-700 text-xs text-center">

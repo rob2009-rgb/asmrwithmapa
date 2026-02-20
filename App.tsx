@@ -7,7 +7,7 @@ import MerchShop from './components/MerchShop';
 import AdminDashboard from './components/AdminDashboard';
 import { loadSoundLibrary } from './utils/soundManager';
 import { SoundCategory, UserPreferences, PlayerState } from './types';
-import { Lock, Sparkles } from 'lucide-react';
+import { Lock, Sparkles, Youtube, Instagram, Music, Heart } from 'lucide-react';
 import { NotificationProvider } from './src/contexts/NotificationContext';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { AuthModal } from './src/components/auth/AuthModal';
@@ -293,17 +293,46 @@ const App: React.FC = () => {
                 Explore MAPA ASMR
               </h3>
               <p className={`text-lg mb-10 font-medium ${prefs.isNightMode ? 'text-slate-300' : 'text-slate-800'}`}>
-                Follow the journey on YouTube for full-length roleplays, mic licking, and deep relaxation videos.
+                Follow the journey for roleplays, relaxation, and exclusive content updates.
               </p>
-              <a
-                href="https://www.youtube.com/@asmrwithmapa/videos"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center space-x-3 px-10 py-5 bg-red-600 text-white rounded-[2rem] font-bold hover:bg-red-700 transition-all shadow-xl hover:scale-105 active:scale-95"
-              >
-                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" /></svg>
-                <span>Subscribe on YouTube</span>
-              </a>
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href="https://www.youtube.com/@asmrwithmapa/videos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-[160px] inline-flex items-center justify-center space-x-3 px-6 py-4 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-all shadow-xl hover:scale-105 active:scale-95"
+                >
+                  <Youtube size={20} />
+                  <span>YouTube</span>
+                </a>
+                <a
+                  href="https://www.instagram.com/asmr.withmapa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-[160px] inline-flex items-center justify-center space-x-3 px-6 py-4 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white rounded-2xl font-bold hover:shadow-pink-500/20 transition-all shadow-xl hover:scale-105 active:scale-95"
+                >
+                  <Instagram size={20} />
+                  <span>Instagram</span>
+                </a>
+                <a
+                  href="https://www.tiktok.com/@asmr.with.mapa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-[160px] inline-flex items-center justify-center space-x-3 px-6 py-4 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-700 transition-all shadow-xl hover:scale-105 active:scale-95 border border-white/5"
+                >
+                  <Music size={20} />
+                  <span>TikTok</span>
+                </a>
+                <a
+                  href="https://www.patreon.com/ASMRwithMAPA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center space-x-3 px-6 py-4 bg-pink-600 text-white rounded-2xl font-bold hover:bg-pink-700 transition-all shadow-xl hover:scale-105 active:scale-95"
+                >
+                  <Heart size={20} />
+                  <span>Support on Patreon</span>
+                </a>
+              </div>
             </div>
 
             <div className="md:w-1/2 aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/20 relative z-20">
