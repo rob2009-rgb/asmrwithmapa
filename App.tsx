@@ -28,6 +28,7 @@ import SystemStatusBanner from './src/components/ui/SystemStatusBanner';
 import { LandingPage } from './components/LandingPage';
 import { AnalyticsService } from './src/services/AnalyticsService';
 import { ConsentBanner } from './src/components/ui/ConsentBanner';
+import { MobileBottomNav } from './src/components/navigation/MobileBottomNav';
 
 const App: React.FC = () => {
   const playerRef = React.useRef<PlayerHandle>(null);
@@ -210,7 +211,7 @@ const App: React.FC = () => {
         currentCategoryId={currentSound?.id}
       />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-8 md:py-16 w-full pb-48">
+      <main className="flex-1 max-w-7xl mx-auto px-4 py-8 md:py-16 w-full pb-32 lg:pb-48">
         <section className="text-center mb-20 space-y-10 animate-in fade-in slide-in-from-top-4 duration-1000 relative">
           {/* Ambient Background Glow for Hero */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-64 bg-pink-500/10 blur-[120px] pointer-events-none -z-10" />
@@ -519,6 +520,22 @@ const App: React.FC = () => {
       />
 
       <ConsentBanner />
+
+      <MobileBottomNav
+        isNightMode={prefs.isNightMode}
+        isPremium={prefs.isPremiumUser}
+        onOpenDiscovery={() => { setIsDiscoveryOpen(true); AnalyticsService.trackClick('mobile_nav_discovery'); }}
+        onOpenGuide={() => { setIsGuideOpen(true); AnalyticsService.trackClick('mobile_nav_guide'); }}
+        onOpenChallenges={() => { setIsChallengesOpen(true); AnalyticsService.trackClick('mobile_nav_challenges'); }}
+        onOpenCommunity={() => { setIsMarketplaceOpen(true); AnalyticsService.trackClick('mobile_nav_community'); }}
+        onOpenZen={() => {
+          if (prefs.isPremiumUser) {
+            setIsZenMode(true);
+          } else {
+            setIsPremiumModalOpen(true);
+          }
+        }}
+      />
     </div>
   );
 };
