@@ -18,7 +18,7 @@ import { submitSubscriber } from '../landing/landingDb';
 // submitSubscriber handles the DB/Edge-Function routing internally
 
 /** URL of the existing IONOS-hosted website */
-const APP_URL = 'https://app.asmrwithmapa.com';
+const APP_URL = 'https://asmrwithmapa.co.uk';
 
 // ── Feature cards ──────────────────────────────────────────────────────────
 const FEATURES = [
