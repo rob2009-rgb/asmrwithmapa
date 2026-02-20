@@ -223,11 +223,11 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
             {/* Backdrop */}
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[85vh] animate-in zoom-in-95">
+            <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[85vh] animate-in zoom-in-95">
 
                 {/* Sidebar */}
-                <div className="w-full md:w-64 bg-slate-950 border-r border-slate-800 p-6 flex flex-col gap-2">
-                    <div className="mb-6 px-2 flex items-center gap-3">
+                <div className="w-full md:w-64 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800 p-4 md:p-6 flex flex-col gap-2 shrink-0 md:shrink-1 overflow-y-auto md:overflow-visible max-h-[40vh] md:max-h-full">
+                    <div className="mb-4 md:mb-6 px-2 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">
                             {(user?.email?.[0] || 'U').toUpperCase()}
                         </div>
@@ -252,7 +252,7 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
                             <button
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id as any)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm text-left
+                                className={`w-full flex items-center justify-center md:justify-start gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm text-center md:text-left shrink-0
                                     ${activeTab === item.id ? 'bg-pink-600 text-white shadow-lg shadow-pink-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
                             >
                                 <item.icon size={18} />
@@ -265,15 +265,15 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
                         {role === 'admin' && (
                             <button
                                 onClick={onOpenAdmin}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm text-left text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                className="w-full flex items-center justify-center md:justify-start gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm text-center md:text-left text-red-400 hover:bg-red-500/10 hover:text-red-300 shrink-0"
                             >
                                 <LayoutDashboard size={18} />
-                                Admin Portal
+                                <span className="hidden md:inline">Admin Portal</span>
                             </button>
                         )}
                         <button
                             onClick={handleSignOut}
-                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm text-left text-slate-500 hover:text-slate-300 hover:bg-slate-800"
+                            className="w-full flex items-center justify-center md:justify-start gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm text-center md:text-left text-slate-500 hover:text-slate-300 hover:bg-slate-800 shrink-0"
                         >
                             <LogOut size={18} />
                             Sign Out
@@ -282,20 +282,20 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col bg-slate-900 relative">
+                <div className="flex-1 flex flex-col bg-slate-900 relative overflow-hidden">
                     {/* Top Right Close Button Only */}
-                    <div className="absolute top-6 right-6 z-10">
-                        <button onClick={onClose} className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+                    <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10">
+                        <button onClick={onClose} className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all shadow-lg">
                             <X size={20} />
                         </button>
                     </div>
 
-                    <div className="p-8 pb-4 border-b border-slate-800/50">
-                        <h2 className="text-3xl font-black text-white tracking-tight mb-2">
+                    <div className="p-6 md:p-8 pb-4 border-b border-slate-800/50 shrink-0">
+                        <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-2 pr-10">
                             {activeTab === 'account' && 'Account Settings'}
                             {activeTab === 'support' && 'Help & Support'}
                         </h2>
-                        <p className="text-slate-400">
+                        <p className="text-sm md:text-base text-slate-400">
                             {activeTab === 'account' && 'Manage your personal details, membership, and security here.'}
                             {activeTab === 'vault' && 'Securely journal your thoughts in an encrypted local vault.'}
                             {activeTab === 'support' && 'Get help or submit feedback to our team.'}
@@ -311,10 +311,10 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
                             />
                         </div>
                     ) : (
-                        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative">
                             {/* MY ACCOUNT TAB (Consolidated) */}
                             {activeTab === 'account' && (
-                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 max-w-3xl">
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 max-w-3xl pb-20">
                                     {/* ... content for account ... */}
                                     {/* 1. Personal Details */}
                                     <section className="space-y-4">
@@ -437,7 +437,7 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
                                         </div>
 
                                         {/* Password Reset */}
-                                        <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl space-y-4">
+                                        <div className="p-4 md:p-6 bg-slate-950 border border-slate-800 rounded-2xl space-y-4">
                                             <div className="font-bold text-white text-sm">Update Password</div>
                                             <div className="space-y-3">
                                                 <input
@@ -447,7 +447,7 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
                                                     onChange={e => setCurrentPassword(e.target.value)}
                                                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:border-pink-500 outline-none transition-colors text-sm"
                                                 />
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                                     <input
                                                         type="password"
                                                         placeholder="New Password"
@@ -479,7 +479,7 @@ export const ProfileHub: React.FC<ProfileHubProps> = ({ isOpen, onClose, user, c
 
                             {/* SUPPORT TAB */}
                             {activeTab === 'support' && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 h-full flex flex-col">
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 h-full flex flex-col pb-20">
                                     {/* Support sub-tab switcher */}
                                     <div className="flex gap-1 p-1 bg-slate-900 rounded-xl border border-slate-800 shrink-0">
                                         <button

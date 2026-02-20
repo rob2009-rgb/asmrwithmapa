@@ -1,5 +1,16 @@
 import { supabase } from '../supabaseClient';
 
+function generateUUID() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 export type EventType = 'view' | 'click' | 'error' | 'heartbeat' | 'conversion' | 'performance' | 'consent';
 
 interface AnalyticsEventPayload {
@@ -30,7 +41,7 @@ class AnalyticsServiceImpl {
         // We generate a fingerprint per browser profile so we don't need IP tracking
         let storedFingerprint = localStorage.getItem('analytics_fingerprint');
         if (!storedFingerprint) {
-            storedFingerprint = crypto.randomUUID();
+            storedFingerprint = generateUUID();
             localStorage.setItem('analytics_fingerprint', storedFingerprint);
         }
         this.sessionFingerprint = storedFingerprint;
@@ -154,7 +165,7 @@ class AnalyticsServiceImpl {
         };
 
         const event: AnalyticsEvent = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             session_id: this.sessionId || 'pending', // Will be swapped on flush if pending
             event_type,
             feature_name,
