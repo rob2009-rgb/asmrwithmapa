@@ -4,10 +4,9 @@
  * Standalone (Cloudflare Pages): isOpen={true}  isPreview={false}  — shows nav + website button
  * In-app preview:                isOpen={...}   isPreview={true}   — shows close button
  *
- * Website CTA links to: https://app.asmrwithmapa.com (existing IONOS site)
- * After email signup: 3-second countdown then auto-redirect to the website
+ * Website CTA links to: https://asmrwithmapa.co.uk
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
     X, Sparkles, Moon, Users, Mic, Headphones, Wind,
     Check, ChevronDown, Instagram, Youtube, Mail,
@@ -35,8 +34,6 @@ const EmailForm: React.FC<{ size?: 'hero' | 'normal' }> = ({ size = 'normal' }) 
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [msg, setMsg] = useState('');
-    const [countdown, setCountdown] = useState(3);
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,34 +51,18 @@ const EmailForm: React.FC<{ size?: 'hero' | 'normal' }> = ({ size = 'normal' }) 
         }
     };
 
-    useEffect(() => {
-        if (status === 'success') {
-            setCountdown(3);
-            timerRef.current = setInterval(() => {
-                setCountdown(prev => {
-                    if (prev <= 1) {
-                        clearInterval(timerRef.current!);
-                        window.location.href = APP_URL;
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [status]);
 
     if (status === 'success') {
         return (
             <div className="space-y-4">
                 <div className="flex items-center justify-center gap-3 p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 font-bold text-lg">
-                    <Check size={24} /> {msg} Taking you to the website in {countdown}s…
+                    <Check size={24} /> {msg}
                 </div>
                 <a
                     href={APP_URL}
-                    className="block text-center text-sm text-slate-400 hover:text-pink-400 transition-colors underline underline-offset-4"
+                    className="flex items-center justify-center gap-2 w-full py-3 px-6 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-2xl transition-colors text-sm"
                 >
-                    visit our website lovelies! →
+                    Take me to the website <ArrowRight size={16} />
                 </a>
             </div>
         );
