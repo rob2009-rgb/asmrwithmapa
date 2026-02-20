@@ -151,7 +151,7 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose} />
 
-            <div className="relative w-full max-w-5xl h-[80vh] bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row">
+            <div className="relative w-full max-w-5xl h-[90vh] md:h-[80vh] bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row pb-16 md:pb-0">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-indigo-500 to-emerald-500 z-20" />
 
                 {/* Mobile Close / Header */}
@@ -163,7 +163,7 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
                 </div>
 
                 {/* Sidebar (List) */}
-                <div className="w-full md:w-1/3 bg-slate-950/50 border-r border-slate-800 overflow-y-auto custom-scrollbar p-4 space-y-2">
+                <div className="w-full md:w-1/3 bg-slate-950/50 border-b md:border-b-0 md:border-r border-slate-800 flex overflow-x-auto md:overflow-y-auto md:flex-col custom-scrollbar p-2 md:p-4 gap-2 md:space-y-2 shrink-0 md:shrink-1">
                     <div className="hidden md:flex justify-between items-center mb-6 pl-2 pt-2">
                         <h2 className="text-xl font-black text-white tracking-tight">Features</h2>
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">{FEATURES.length} Modules</span>
@@ -173,34 +173,34 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
                         <button
                             key={feature.id}
                             onClick={() => setSelectedId(feature.id)}
-                            className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 group relative overflow-hidden
+                            className={`flex flex-col md:flex-row md:w-full items-center md:items-start text-center md:text-left p-3 md:p-4 rounded-xl md:rounded-2xl border transition-all duration-300 group relative overflow-hidden shrink-0 md:shrink-1 min-w-[100px] md:min-w-0
                                 ${selectedId === feature.id
                                     ? 'bg-slate-800 border-pink-500/50 ring-1 ring-pink-500/20'
                                     : 'bg-transparent border-transparent hover:bg-slate-900 hover:border-slate-800'}
                             `}
                         >
-                            <div className="flex items-center gap-4 relative z-10">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors
+                            <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 relative z-10 w-full">
+                                <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors
                                     ${selectedId === feature.id ? 'bg-pink-500 text-white shadow-lg shadow-pink-900/20' : 'bg-slate-900 text-slate-500 group-hover:text-pink-400'}
                                 `}>
                                     {feature.icon}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between">
-                                        <span className={`font-bold text-sm truncate ${selectedId === feature.id ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                <div className="flex-1 min-w-0 w-full flex flex-col items-center md:items-start">
+                                    <div className="flex flex-col md:flex-row items-center md:justify-between w-full gap-1 md:gap-0">
+                                        <span className={`font-bold text-xs md:text-sm truncate w-full ${selectedId === feature.id ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
                                             {feature.title}
                                         </span>
                                         {feature.customBadge ? (
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ml-2
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded
                                                 ${selectedId === feature.id ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-indigo-400'}
                                             `}>{feature.customBadge}</span>
                                         ) : feature.pro && (
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ml-2
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded
                                                 ${selectedId === feature.id ? 'bg-amber-500 text-white' : 'bg-slate-800 text-slate-600'}
                                             `}>PRO</span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-500 truncate mt-0.5 opacity-80">{feature.shortDesc}</p>
+                                    <p className="hidden md:block text-xs text-slate-500 truncate mt-0.5 opacity-80">{feature.shortDesc}</p>
                                 </div>
                             </div>
 
@@ -219,7 +219,7 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
                         <X size={16} /> <span className="text-xs font-bold uppercase tracking-widest">Close Guide</span>
                     </button>
 
-                    <div className="flex-1 p-8 md:p-16 flex flex-col justify-center animate-in fade-in slide-in-from-right-8 duration-500 key={selectedFeature.id}">
+                    <div className="flex-1 overflow-y-auto p-6 md:p-16 flex flex-col justify-start md:justify-center animate-in fade-in slide-in-from-right-8 duration-500 key={selectedFeature.id}">
 
                         <div className="mb-8">
                             {selectedFeature.customBadge ? (
@@ -244,18 +244,18 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
                             </p>
                         </div>
 
-                        <div className="p-6 md:p-8 rounded-3xl bg-slate-950/50 border border-slate-800 max-w-2xl backdrop-blur-sm">
-                            <h3 className="text-pink-500 text-sm font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <div className="p-5 md:p-8 rounded-2xl md:rounded-3xl bg-slate-950/50 border border-slate-800 max-w-2xl backdrop-blur-sm mb-4">
+                            <h3 className="text-pink-500 text-xs md:text-sm font-black uppercase tracking-widest mb-2 flex items-center gap-2">
                                 <Sparkles size={14} /> The Benefit
                             </h3>
-                            <p className="text-lg md:text-xl text-white font-bold">
+                            <p className="text-base md:text-xl text-white font-bold">
                                 "{selectedFeature.benefit}"
                             </p>
                         </div>
                     </div>
 
-                    <div className="p-8 border-t border-slate-800 bg-slate-950/30 flex justify-between items-center">
-                        <span className="text-slate-500 text-xs font-medium hidden md:block">
+                    <div className="p-6 md:p-8 border-t border-slate-800 bg-slate-950/30 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
+                        <span className="text-slate-500 text-xs font-medium text-center md:text-left">
                             Tip: Look for the <span className="text-pink-500">PRO</span> badge to unlock full potential.
                         </span>
                         <div className="flex gap-4 w-full md:w-auto">

@@ -18,22 +18,22 @@ export const ChallengesModal: React.FC<ChallengesModalProps> = ({ isOpen, onClos
     return (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
-            <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[80vh] animate-in zoom-in-95">
+            <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-[80vh] animate-in zoom-in-95">
 
                 {/* Header */}
-                <div className="p-8 pb-4 border-b border-slate-800 flex justify-between items-center">
+                <div className="p-6 md:p-8 pb-4 border-b border-slate-800 flex justify-between items-start md:items-center">
                     <div>
-                        <h2 className="text-3xl font-black text-white tracking-tight mb-2">Weekly Challenges</h2>
+                        <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-2 pr-8">Weekly Challenges</h2>
                         <p className="text-slate-400">Participate in community challenges and earn badges.</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
-                        <X size={24} />
+                    <button onClick={onClose} className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all shrink-0">
+                        <X size={20} className="md:w-6 md:h-6" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 custom-scrollbar">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         {challenges.map(challenge => {
                             const isJoined = myParticipations.some(p => p.challenge_id === challenge.id);
                             const participation = myParticipations.find(p => p.challenge_id === challenge.id);

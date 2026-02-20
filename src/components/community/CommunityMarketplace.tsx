@@ -82,68 +82,73 @@ export const CommunityMarketplace: React.FC<CommunityMarketplaceProps> = ({ isOp
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
 
-            <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[85vh] animate-in zoom-in-95">
+            <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[85vh] animate-in zoom-in-95">
 
                 {/* Sidebar / Navigation */}
-                <div className="w-full md:w-64 bg-slate-950 border-r border-slate-800 p-6 flex flex-col gap-2">
-                    <h2 className="text-xl font-black text-white mb-6 flex items-center gap-2">
+                <div className="w-full md:w-64 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800 p-4 md:p-6 flex flex-col md:flex-col gap-2 shrink-0 max-h-[40vh] md:max-h-full overflow-y-auto custom-scrollbar md:overflow-visible">
+                    <h2 className="text-xl font-black text-white mb-4 md:mb-6 flex items-center gap-2">
                         <Music className="text-pink-500" /> Community
                     </h2>
 
-                    <button
-                        onClick={() => setActiveTab('browse')}
-                        className={`text-left px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'browse' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                    >
-                        Browse Mixes
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('my-mixes')}
-                        className={`text-left px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'my-mixes' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                    >
-                        My Collection
-                    </button>
+                    <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 mb-4 md:mb-0 shrink-0 border-b border-slate-800 md:border-none">
+                        <button
+                            onClick={() => setActiveTab('browse')}
+                            className={`text-center md:text-left px-4 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'browse' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                        >
+                            Browse
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('my-mixes')}
+                            className={`text-center md:text-left px-4 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'my-mixes' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                        >
+                            My Collection
+                        </button>
 
-                    <button
-                        onClick={() => setActiveTab('leaderboard')}
-                        className={`text-left px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                    >
-                        <Trophy size={16} /> Leaderboard
-                    </button>
-                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Publish Mix</h4>
-                    <p className="text-xs text-slate-400 mb-3">Share your current soundscape with the world.</p>
-                    <input
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white mb-2 outline-none focus:border-pink-500"
-                        placeholder="Mix Name"
-                        value={pubName}
-                        onChange={e => setPubName(e.target.value)}
-                    />
-                    <textarea
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white mb-2 outline-none focus:border-pink-500 h-16 resize-none"
-                        placeholder="Description (optional)"
-                        value={pubDesc}
-                        onChange={e => setPubDesc(e.target.value)}
-                    />
-                    <button
-                        onClick={handlePublish}
-                        disabled={isPublishing || !currentLayers}
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
-                    >
-                        {isPublishing ? <Loader2 className="animate-spin" size={12} /> : <UploadCloud size={12} />}
-                        Publish
-                    </button>
+                        <button
+                            onClick={() => setActiveTab('leaderboard')}
+                            className={`text-center md:text-left px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center md:justify-start gap-2 whitespace-nowrap ${activeTab === 'leaderboard' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                        >
+                            <Trophy size={16} /> Leaderboard
+                        </button>
+                    </div>
+
+                    <div className="hidden md:block">
+                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2 mt-4">Publish Mix</h4>
+                        <p className="text-xs text-slate-400 mb-3">Share your current soundscape with the world.</p>
+                        <input
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white mb-2 outline-none focus:border-pink-500"
+                            placeholder="Mix Name"
+                            value={pubName}
+                            onChange={e => setPubName(e.target.value)}
+                        />
+                        <textarea
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white mb-2 outline-none focus:border-pink-500 h-16 resize-none"
+                            placeholder="Description (optional)"
+                            value={pubDesc}
+                            onChange={e => setPubDesc(e.target.value)}
+                        />
+                        <button
+                            onClick={handlePublish}
+                            disabled={isPublishing || !currentLayers}
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+                        >
+                            {isPublishing ? <Loader2 className="animate-spin" size={12} /> : <UploadCloud size={12} />}
+                            Publish
+                        </button>
+                    </div>
                 </div>
 
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col bg-slate-900 relative">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white z-10">
-                        <X size={24} />
+                <div className="flex-1 flex flex-col bg-slate-900 relative overflow-hidden">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white z-20 bg-slate-800 md:bg-transparent rounded-full p-2 md:p-0 shadow-lg md:shadow-none">
+                        <X size={20} className="md:w-6 md:h-6" />
                     </button>
 
-                    <div className="p-8 pb-0">
-                        <div className="flex justify-between items-end mb-6">
-                            <div>
-                                <h1 className="text-3xl font-black text-white tracking-tight">
+                    <div className="p-6 md:p-8 pb-0 shrink-0">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 md:mb-6 gap-4">
+                            <div className="pr-10">
+                                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
                                     {activeTab === 'browse' ? 'Discover Soundscapes' : 'My Mixes'}
                                 </h1>
                                 <p className="text-slate-400 mt-1">
@@ -169,10 +174,10 @@ export const CommunityMarketplace: React.FC<CommunityMarketplaceProps> = ({ isOp
                             )}
                         </div>
 
-                        <div className="relative mb-6">
+                        <div className="relative mb-4 md:mb-6">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                             <input
-                                className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white focus:border-pink-500 outline-none transition-all"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3 md:py-4 pl-12 pr-4 text-sm md:text-base text-white focus:border-pink-500 outline-none transition-all"
                                 placeholder="Search specifically for..."
                             />
                         </div>
@@ -180,7 +185,7 @@ export const CommunityMarketplace: React.FC<CommunityMarketplaceProps> = ({ isOp
 
                     {
                         activeTab !== 'leaderboard' && (
-                            <div className="flex-1 overflow-y-auto p-8 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 align-start content-start">
+                            <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 align-start content-start pb-24 md:pb-8">
                                 {loading ? (
                                     <div className="col-span-full flex justify-center py-20">
                                         <Loader2 className="animate-spin text-pink-500" size={40} />
@@ -251,7 +256,7 @@ export const CommunityMarketplace: React.FC<CommunityMarketplaceProps> = ({ isOp
 
                     {
                         activeTab === 'leaderboard' && (
-                            <div className="flex-1 overflow-hidden p-8">
+                            <div className="flex-1 overflow-hidden p-0 md:p-8 pb-20 md:pb-8">
                                 <StreakLeaderboard currentUserId={user?.id} />
                             </div>
                         )

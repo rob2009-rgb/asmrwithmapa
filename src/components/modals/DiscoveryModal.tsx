@@ -21,9 +21,9 @@ export const DiscoveryModal: React.FC<DiscoveryModalProps> = ({ isOpen, onClose,
     return (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
-            <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95">
+            <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl flex flex-col h-[90vh] md:h-auto md:max-h-[90vh] overflow-hidden animate-in zoom-in-95">
 
-                <div className="relative h-48 bg-slate-950 overflow-hidden shrink-0">
+                <div className="relative h-40 md:h-48 bg-slate-950 overflow-hidden shrink-0">
                     <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/50 to-slate-900 z-10" />
                     <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
@@ -51,39 +51,41 @@ export const DiscoveryModal: React.FC<DiscoveryModalProps> = ({ isOpen, onClose,
                                 <Sparkles size={14} /> Dreamscape
                             </button>
                         </div>
-                        <h2 className="text-2xl font-black text-white tracking-tight">
+                        <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
                             {activeTab === 'journey' ? 'Discover Your Sound' : 'AI Dreamscape'}
                         </h2>
                     </div>
                 </div>
 
-                {activeTab === 'journey' ? (
-                    <div className="p-8 text-center space-y-8 animate-in fade-in slide-in-from-right-4">
-                        <p className="text-slate-400 leading-relaxed max-w-md mx-auto">
-                            Not sure what to listen to? Take our interactive journey to find the perfect soundscape for your current state of mind.
-                        </p>
+                <div className="flex-1 overflow-y-auto w-full pb-20 md:pb-0">
+                    {activeTab === 'journey' ? (
+                        <div className="p-6 md:p-8 text-center space-y-8 animate-in fade-in slide-in-from-right-4">
+                            <p className="text-slate-400 leading-relaxed max-w-md mx-auto">
+                                Not sure what to listen to? Take our interactive journey to find the perfect soundscape for your current state of mind.
+                            </p>
 
-                        <button
-                            onClick={() => {
-                                onStartJourney();
-                                onClose();
-                            }}
-                            className="px-8 py-4 bg-white text-indigo-950 font-black rounded-xl shadow-xl shadow-indigo-900/20 hover:scale-105 transition-transform flex items-center gap-2 mx-auto"
-                        >
-                            <Send size={20} />
-                            Start Journey
-                        </button>
-                    </div>
-                ) : (
-                    <div className="p-4 animate-in fade-in slide-in-from-left-4">
-                        <DreamscapeGenerator
-                            onPlayDreamscape={() => { onClose(); /* Handle play */ }}
-                            isPremium={isPremium}
-                            onOpenPremium={onOpenPremium}
-                            isNightMode={true} // Forces dark mode style inside modal
-                        />
-                    </div>
-                )}
+                            <button
+                                onClick={() => {
+                                    onStartJourney();
+                                    onClose();
+                                }}
+                                className="px-8 py-4 bg-white text-indigo-950 font-black rounded-xl shadow-xl shadow-indigo-900/20 hover:scale-105 transition-transform flex items-center gap-2 mx-auto"
+                            >
+                                <Send size={20} />
+                                Start Journey
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="p-4 animate-in fade-in slide-in-from-left-4">
+                            <DreamscapeGenerator
+                                onPlayDreamscape={() => { onClose(); /* Handle play */ }}
+                                isPremium={isPremium}
+                                onOpenPremium={onOpenPremium}
+                                isNightMode={true} // Forces dark mode style inside modal
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

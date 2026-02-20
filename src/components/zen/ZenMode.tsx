@@ -111,16 +111,16 @@ export const ZenMode: React.FC<ZenModeProps> = ({
 
                 {/* World-Class Timer Section - Optimized Scale */}
                 <div className="flex flex-col items-center space-y-8 w-full">
-                    <div className="relative flex items-center gap-8 md:gap-16">
+                    <div className="relative flex items-center gap-4 md:gap-8 lg:gap-16">
                         <button
                             onClick={() => setTimeLeft(Math.max(60, timeLeft - 60))}
-                            className="p-3 rounded-full text-slate-700 hover:text-blue-400 transition-all hover:bg-white/5 active:scale-90"
+                            className="p-2 md:p-3 rounded-full text-slate-700 hover:text-blue-400 transition-all hover:bg-white/5 active:scale-90"
                         >
                             <ChevronDown size={48} strokeWidth={0.5} />
                         </button>
 
                         <div className="relative">
-                            <div className="text-[10rem] md:text-[14rem] font-brand font-thin leading-none tracking-[-0.04em] tabular-nums select-none text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-200 to-slate-900 filter drop-shadow-[0_0_60px_rgba(255,255,255,0.05)] px-4">
+                            <div className="text-[6rem] md:text-[10rem] lg:text-[14rem] font-brand font-thin leading-none tracking-[-0.04em] tabular-nums select-none text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-200 to-slate-900 filter drop-shadow-[0_0_60px_rgba(255,255,255,0.05)] px-2 md:px-4">
                                 {formatTime(timeLeft)}
                             </div>
                             <div className="absolute -inset-6 bg-blue-500/5 blur-[80px] -z-10 rounded-full"></div>
@@ -128,7 +128,7 @@ export const ZenMode: React.FC<ZenModeProps> = ({
 
                         <button
                             onClick={() => setTimeLeft(timeLeft + 60)}
-                            className="p-3 rounded-full text-slate-700 hover:text-blue-400 transition-all hover:bg-white/5 active:scale-90"
+                            className="p-2 md:p-3 rounded-full text-slate-700 hover:text-blue-400 transition-all hover:bg-white/5 active:scale-90"
                         >
                             <ChevronUp size={48} strokeWidth={0.5} />
                         </button>
@@ -162,13 +162,13 @@ export const ZenMode: React.FC<ZenModeProps> = ({
                         </div>
 
                         {/* Integrated Selector Bar */}
-                        <div className="w-full max-w-4xl bg-slate-900/40 backdrop-blur-3xl p-4 md:p-6 rounded-[3rem] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 shadow-2xl transition-all hover:bg-slate-900/50 overflow-hidden">
+                        <div className="w-full max-w-4xl bg-slate-900/40 backdrop-blur-3xl p-4 md:p-6 rounded-[2rem] md:rounded-[3rem] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 shadow-2xl transition-all hover:bg-slate-900/50 overflow-hidden">
 
                             {/* Status & Navigation */}
-                            <div className="flex items-center gap-6 px-4 flex-shrink-0">
+                            <div className="flex items-center gap-4 md:gap-6 px-2 md:px-4 flex-shrink-0 w-full justify-center md:w-auto md:justify-start">
                                 <button onClick={onPrev} className="p-2 text-slate-600 hover:text-blue-400 transition-all hover:scale-110 active:scale-95"><SkipBack size={22} fill="currentColor" strokeWidth={0} /></button>
 
-                                <div className="flex flex-col items-center min-w-[140px] text-center">
+                                <div className="flex flex-col items-center min-w-[120px] md:min-w-[140px] text-center">
                                     <span className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-400/80 mb-1">
                                         {playerState === PlayerState.PLAYING ? 'Immersed' : 'Silent'}
                                     </span>
@@ -180,10 +180,10 @@ export const ZenMode: React.FC<ZenModeProps> = ({
                                 <button onClick={onNext} className="p-2 text-slate-600 hover:text-blue-400 transition-all hover:scale-110 active:scale-95"><SkipForward size={22} fill="currentColor" strokeWidth={0} /></button>
                             </div>
 
-                            <div className="h-8 w-[1px] bg-white/5 hidden md:block flex-shrink-0"></div>
+                            <div className="w-full h-[1px] md:h-8 md:w-[1px] bg-white/5 block flex-shrink-0 my-2 md:my-0"></div>
 
                             {/* Condensed Path Selector */}
-                            <div className="flex flex-col items-center md:items-start gap-1 px-4 min-w-0 flex-1 w-full">
+                            <div className="flex flex-col items-center md:items-start gap-1 px-4 min-w-0 flex-1 w-full pb-14 md:pb-0">
                                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500/80 mb-1 whitespace-nowrap">
                                     Choose Path
                                 </span>
