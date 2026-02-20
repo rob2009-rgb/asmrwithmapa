@@ -13,12 +13,13 @@ import SettingsPanel from './admin/SettingsPanel';
 import UserPanel from './admin/UserPanel';
 import KnowledgeBasePanel from './admin/KnowledgeBasePanel';
 import SystemStatusPanel from './admin/SystemStatusPanel';
+import AnalyticsPanel from './admin/AnalyticsPanel';
 
 interface AdminDashboardProps {
   onClose: () => void;
 }
 
-type AdminTab = 'sounds' | 'merch' | 'security' | 'marketing' | 'support' | 'users' | 'settings' | 'logs' | 'knowledge' | 'status';
+type AdminTab = 'sounds' | 'merch' | 'security' | 'marketing' | 'support' | 'users' | 'settings' | 'logs' | 'knowledge' | 'status' | 'analytics';
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   useScrollLock(true);
@@ -366,11 +367,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             <button onClick={() => setActiveTab('knowledge')} className={`w-full text-left px-4 py-2.5 rounded-xl flex items-center space-x-3 transition-colors ${activeTab === 'knowledge' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
               <Book size={16} /> <span className="font-semibold text-sm">Knowledge Base</span>
             </button>
-            <button onClick={() => setActiveTab('logs')} className={`w-full text-left px-4 py-2.5 rounded-xl flex items-center space-x-3 transition-colors ${activeTab === 'logs' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-              <Activity size={16} /> <span className="font-semibold text-sm">Error Logs</span>
+          </div>
+
+          {/* Data & Analytics */}
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-3 pb-1">Data & Insights</p>
+          <div className="space-y-1 mb-4">
+            <button onClick={() => setActiveTab('analytics')} className={`w-full text-left px-4 py-2.5 rounded-xl flex items-center space-x-3 transition-colors ${activeTab === 'analytics' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+              <Activity size={16} /> <span className="font-semibold text-sm">Product Analytics</span>
             </button>
-            <button onClick={() => setActiveTab('status')} className={`w-full text-left px-4 py-2.5 rounded-xl flex items-center space-x-3 transition-colors ${activeTab === 'status' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-              <Star size={16} /> <span className="font-semibold text-sm">System Status</span>
+            <button onClick={() => setActiveTab('logs')} className={`w-full text-left px-4 py-2.5 rounded-xl flex items-center space-x-3 transition-colors ${activeTab === 'logs' ? 'bg-pink-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+              <AlertTriangle size={16} /> <span className="font-semibold text-sm">Error Logs</span>
             </button>
           </div>
 
@@ -713,6 +719,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         {activeTab === 'settings' && (
           <div className="flex-1 overflow-y-auto p-8">
             <SettingsPanel />
+          </div>
+        )}
+
+        {/* ANALYTICS TAB */}
+        {activeTab === 'analytics' && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <AnalyticsPanel />
           </div>
         )}
 

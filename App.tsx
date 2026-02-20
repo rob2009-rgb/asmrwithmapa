@@ -26,6 +26,8 @@ import { TriggerJourney } from './src/components/onboarding/TriggerJourney';
 import { AskMapaChat } from './src/components/features/AskMapaChat';
 import SystemStatusBanner from './src/components/ui/SystemStatusBanner';
 import { LandingPage } from './components/LandingPage';
+import { AnalyticsService } from './src/services/AnalyticsService';
+import { ConsentBanner } from './src/components/ui/ConsentBanner';
 
 const App: React.FC = () => {
   const playerRef = React.useRef<PlayerHandle>(null);
@@ -79,6 +81,9 @@ const App: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       handleSession(session);
     });
+
+    // Feature 3 & 5: Track App Init
+    AnalyticsService.trackView('app_home');
 
     function handleSession(session: any) {
       setUser(session?.user ?? null);
@@ -156,19 +161,20 @@ const App: React.FC = () => {
         isPremium={prefs.isPremiumUser}
         streak={streak}
         onToggleNightMode={toggleNightMode}
-        onOpenShop={() => setIsShopOpen(true)}
-        onOpenPremium={() => setIsPremiumModalOpen(true)}
-        onOpenGuide={() => setIsGuideOpen(true)}
+        onOpenShop={() => { setIsShopOpen(true); AnalyticsService.trackClick('open_store'); }}
+        onOpenPremium={() => { setIsPremiumModalOpen(true); AnalyticsService.trackClick('open_premium_modal'); }}
+        onOpenGuide={() => { setIsGuideOpen(true); AnalyticsService.trackClick('open_guide'); }}
         onOpenAuth={() => {
           if (user) {
             setIsProfileOpen(true);
           } else {
             setIsAuthOpen(true);
+            AnalyticsService.trackClick('open_auth');
           }
         }}
-        onOpenCommunity={() => setIsMarketplaceOpen(true)}
-        onOpenDiscovery={() => setIsDiscoveryOpen(true)}
-        onOpenChallenges={() => setIsChallengesOpen(true)}
+        onOpenCommunity={() => { setIsMarketplaceOpen(true); AnalyticsService.trackClick('open_community'); }}
+        onOpenDiscovery={() => { setIsDiscoveryOpen(true); AnalyticsService.trackClick('open_discovery'); }}
+        onOpenChallenges={() => { setIsChallengesOpen(true); AnalyticsService.trackClick('open_challenges'); }}
         onOpenZen={() => {
           if (prefs.isPremiumUser) {
             setIsZenMode(true);
@@ -512,6 +518,7 @@ const App: React.FC = () => {
         isPreview={true}
       />
 
+      <ConsentBanner />
     </div>
   );
 };

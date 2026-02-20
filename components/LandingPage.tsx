@@ -13,6 +13,8 @@ import {
     ArrowRight, Music, Brain, Settings, Facebook, Heart,
 } from 'lucide-react';
 import { submitSubscriber } from '../landing/landingDb';
+import { AnalyticsService } from '../src/services/AnalyticsService';
+import { ConsentBanner } from '../src/components/ui/ConsentBanner';
 
 // submitSubscriber handles the DB/Edge-Function routing internally
 
@@ -49,6 +51,7 @@ const EmailForm: React.FC<{ size?: 'hero' | 'normal' }> = ({ size = 'normal' }) 
         setStatus('loading');
         try {
             await submitSubscriber(trimmed);
+            AnalyticsService.trackEvent('conversion', 'waitlist_signup');
             setStatus('success');
             setMsg("You're on the list! 🎉");
             setEmail('');
@@ -138,17 +141,11 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ isOpen, onClose, isPreview = false }) => {
-    const [showCookieNotice, setShowCookieNotice] = useState(false);
-
     useEffect(() => {
-        const dismissed = localStorage.getItem('cookie_notice_dismissed');
-        if (!dismissed) setShowCookieNotice(true);
-    }, []);
-
-    const dismissCookieNotice = () => {
-        localStorage.setItem('cookie_notice_dismissed', 'true');
-        setShowCookieNotice(false);
-    };
+        if (isOpen && !isPreview) {
+            AnalyticsService.trackView('landing_page');
+        }
+    }, [isOpen, isPreview]);
 
     if (!isOpen) return null;
 
@@ -341,30 +338,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ isOpen, onClose, isPre
                 </div>
             </section>
 
-            {/* Cookie Notice */}
-            {showCookieNotice && (
-                <div className="fixed bottom-6 inset-x-6 z-[1000] flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-500">
-                    <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500">
-                            <Settings size={20} />
-                        </div>
-                        <div className="text-left">
-                            <p className="text-sm font-semibold text-white">Privacy & Cookies</p>
-                            <p className="text-xs text-slate-400">
-                                We use basic cookies to remember your preferences and Google Fonts for our aesthetic. No tracking, just relaxation.
-                                <a href="/privacy" className="ml-1 text-pink-500 hover:text-pink-400 underline underline-offset-2 transition-colors">Learn more.</a>
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={dismissCookieNotice}
-                        className="w-full sm:w-auto px-6 py-2.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-pink-600/20 active:scale-95"
-                    >
-                        Alright, let's go!
-                    </button>
-                </div>
-            )}
-
+            {/* Cookie Notice replaced by global Consent Banner injected at App level */}
             {/* ── FOOTER ── */}
             <footer className="py-12 bg-slate-950 border-t border-slate-900 px-6">
                 <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
