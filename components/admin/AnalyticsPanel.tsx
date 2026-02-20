@@ -11,6 +11,10 @@ export default function AnalyticsPanel() {
     });
 
     const [recentEvents, setRecentEvents] = useState<any[]>([]);
+    const [allEvents, setAllEvents] = useState<any[]>([]);
+    const [topFeatures, setTopFeatures] = useState<{ name: string, count: number }[]>([]);
+    const [topPages, setTopPages] = useState<{ path: string, count: number }[]>([]);
+    const [filterType, setFilterType] = useState<string>('all');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -40,16 +44,44 @@ export default function AnalyticsPanel() {
                 });
             }
 
-            // Load recent events
+            // Load recent events for aggregation and stream
             const { data: events, error: eventErr } = await (supabase as any)
                 .from('analytics_events')
                 .select('*')
                 .order('created_at', { ascending: false })
-                .limit(100);
+                .limit(1000); // Fetch up to 1000 to do meaningful local aggregations
 
             if (events && !eventErr) {
-                setRecentEvents(events);
-                setStats(prev => ({ ...prev, totalEvents: events.length })); // Just showing sample size for now
+                setAllEvents(events);
+                setStats(prev => ({ ...prev, totalEvents: events.length }));
+
+                // Aggregate top features
+                const featureCounts: Record<string, number> = {};
+                const pageCounts: Record<string, number> = {};
+
+                events.forEach((evt: any) => {
+                    const feature = evt.feature_name;
+                    if (feature) {
+                        featureCounts[feature] = (featureCounts[feature] || 0) + 1;
+                    }
+                    const path = evt.metadata?.path;
+                    if (path) {
+                        pageCounts[path] = (pageCounts[path] || 0) + 1;
+                    }
+                });
+
+                const sortedFeatures = Object.entries(featureCounts)
+                    .map(([name, count]) => ({ name, count }))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 5);
+
+                const sortedPages = Object.entries(pageCounts)
+                    .map(([path, count]) => ({ path, count }))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 5);
+
+                setTopFeatures(sortedFeatures);
+                setTopPages(sortedPages);
             }
 
         } catch (err) {
@@ -58,6 +90,14 @@ export default function AnalyticsPanel() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let filtered = allEvents;
+        if (filterType !== 'all') {
+            filtered = allEvents.filter(e => e.event_type === filterType);
+        }
+        setRecentEvents(filtered.slice(0, 100)); // Only show top 100 in stream
+    }, [filterType, allEvents]);
 
     if (loading) {
         return (
@@ -107,39 +147,83 @@ export default function AnalyticsPanel() {
                 />
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
-                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <Globe className="text-slate-400" /> Recent Activity Stream
-                </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Aggregations */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Top Features</h3>
+                        <div className="space-y-3">
+                            {topFeatures.length === 0 ? <p className="text-xs text-slate-500">No feature data.</p> : topFeatures.map((f, i) => (
+                                <div key={i} className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                    <span className="text-sm font-bold text-white truncate pr-2">{f.name}</span>
+                                    <span className="bg-pink-500/10 text-pink-400 px-2 py-1 rounded text-xs font-bold shrink-0">{f.count}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-                <div className="space-y-4">
-                    {recentEvents.length === 0 ? (
-                        <p className="text-slate-500 text-center py-8">No recent events tracked.</p>
-                    ) : (
-                        recentEvents.map((evt) => (
-                            <div key={evt.id} className="flex gap-4 items-center p-4 bg-slate-950 rounded-xl border border-slate-800/50 hover:border-slate-700 transition-colors">
-                                <div className="w-24 text-xs font-mono text-slate-500 shrink-0">
-                                    {new Date(evt.created_at).toLocaleTimeString()}
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Top Pages</h3>
+                        <div className="space-y-3">
+                            {topPages.length === 0 ? <p className="text-xs text-slate-500">No page data.</p> : topPages.map((p, i) => (
+                                <div key={i} className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                    <span className="text-sm font-mono text-slate-300 truncate pr-2">{p.path}</span>
+                                    <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs font-bold shrink-0">{p.count}</span>
                                 </div>
-                                <div className="shrink-0">
-                                    <EventTypeBadge type={evt.event_type} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-white truncate">
-                                        {evt.feature_name || 'System'}
-                                    </p>
-                                    <p className="text-xs text-slate-500 truncate">
-                                        ID: {evt.session_id?.substring(0, 8)}... | Path: {evt.metadata?.path || 'N/A'}
-                                    </p>
-                                </div>
-                                {evt.metadata?.active_experiments && evt.metadata.active_experiments !== 'none' && (
-                                    <div className="shrink-0 px-2 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] rounded uppercase font-bold">
-                                        A/B: {evt.metadata.active_experiments}
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Event Stream */}
+                <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col h-[600px]">
+                    <div className="flex justify-between items-center mb-6 shrink-0">
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                            <Globe className="text-slate-400" /> Activity Stream
+                        </h3>
+                        <select
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                            className="bg-slate-950 border border-slate-800 text-slate-300 text-sm rounded-lg p-2 outline-none"
+                        >
+                            <option value="all">All Events</option>
+                            <option value="view">Views</option>
+                            <option value="click">Clicks</option>
+                            <option value="conversion">Conversions</option>
+                            <option value="error">Errors</option>
+                            <option value="consent">Consent</option>
+                        </select>
+                    </div>
+
+                    <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                        {recentEvents.length === 0 ? (
+                            <p className="text-slate-500 text-center py-8">No recent events tracked.</p>
+                        ) : (
+                            recentEvents.map((evt) => (
+                                <div key={evt.id} className="flex gap-4 items-center p-4 bg-slate-950 rounded-xl border border-slate-800/50 hover:border-slate-700 transition-colors">
+                                    <div className="w-24 text-xs font-mono text-slate-500 shrink-0">
+                                        {new Date(evt.created_at).toLocaleTimeString()}
                                     </div>
-                                )}
-                            </div>
-                        ))
-                    )}
+                                    <div className="shrink-0">
+                                        <EventTypeBadge type={evt.event_type} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-white truncate">
+                                            {evt.feature_name || 'System'}
+                                        </p>
+                                        <p className="text-xs text-slate-500 truncate">
+                                            ID: {evt.session_id?.substring(0, 8)}... | Path: {evt.metadata?.path || 'N/A'}
+                                        </p>
+                                    </div>
+                                    {evt.metadata?.active_experiments && evt.metadata.active_experiments !== 'none' && (
+                                        <div className="shrink-0 px-2 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] rounded uppercase font-bold">
+                                            A/B: {evt.metadata.active_experiments}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
