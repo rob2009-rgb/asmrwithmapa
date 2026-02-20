@@ -32,11 +32,18 @@ const FEATURES = [
 // ── Reusable email form ────────────────────────────────────────────────────
 const EmailForm: React.FC<{ size?: 'hero' | 'normal' }> = ({ size = 'normal' }) => {
     const [email, setEmail] = useState('');
+    const [honeypot, setHoneypot] = useState(''); // spam trap — bots fill this
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [msg, setMsg] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        // Honeypot: if filled, this is a bot — fake success silently
+        if (honeypot) {
+            setStatus('success');
+            setMsg("You're on the list! 🎉");
+            return;
+        }
         const trimmed = email.toLowerCase().trim();
         if (!trimmed) return;
         setStatus('loading');
@@ -72,6 +79,17 @@ const EmailForm: React.FC<{ size?: 'hero' | 'normal' }> = ({ size = 'normal' }) 
     return (
         <div>
             <form onSubmit={handleSubmit} className={`flex flex-col sm:flex-row gap-3 ${isHero ? 'max-w-xl mx-auto' : ''}`}>
+                {/* Honeypot — hidden from real users, bots fill it in */}
+                <input
+                    type="text"
+                    name="website"
+                    value={honeypot}
+                    onChange={e => setHoneypot(e.target.value)}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    autoComplete="off"
+                    style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+                />
                 <input
                     type="email" required
                     value={email}

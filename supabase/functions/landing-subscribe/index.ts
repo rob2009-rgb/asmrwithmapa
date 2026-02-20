@@ -2,13 +2,13 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 /** Beautiful HTML welcome email for landing page waitlist signups */
 function buildWelcomeEmail(email: string): string {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -58,11 +58,11 @@ function buildWelcomeEmail(email: string): string {
                   <!-- Feature list -->
                   <table width="100%" cellpadding="0" cellspacing="0">
                     ${[
-            ['🧠', 'AI Soundscapes', 'Tell MAPA how you feel — she curates a perfect layered soundscape in seconds.'],
-            ['🌙', 'Zen Mode', 'Full-screen immersion with breathing timers, ambient visuals & sleep countdowns.'],
-            ['👥', 'Listen Parties', 'Relax together with friends in a shared soundscape session, from anywhere.'],
-            ['🏆', 'Exclusive Early Access', 'Waitlist members get first access and a free Pro trial on launch day.'],
-        ].map(([icon, title, desc]) => `
+      ['🧠', 'AI Soundscapes', 'Tell MAPA how you feel — she curates a perfect layered soundscape in seconds.'],
+      ['🌙', 'Zen Mode', 'Full-screen immersion with breathing timers, ambient visuals & sleep countdowns.'],
+      ['👥', 'Listen Parties', 'Relax together with friends in a shared soundscape session, from anywhere.'],
+      ['🏆', 'Exclusive Early Access', 'Waitlist members get first access and a free Pro trial on launch day.'],
+    ].map(([icon, title, desc]) => `
                     <tr>
                       <td style="padding:10px 0;vertical-align:top;">
                         <table cellpadding="0" cellspacing="0"><tr>
@@ -133,89 +133,143 @@ function buildWelcomeEmail(email: string): string {
 </html>`;
 }
 
+// Strict email regex — rejects obvious junk
+const EMAIL_RE = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+// Disposable/throwaway email domains to block
+const BLOCKED_DOMAINS = new Set([
+  'mailinator.com', 'guerrillamail.com', 'tempmail.com', 'throwam.com',
+  'sharklasers.com', 'grr.la', 'guerrillamail.info', 'spam4.me',
+  'yopmail.com', 'trashmail.com', 'dispostable.com', 'maildrop.cc',
+  'fakeinbox.com', 'spamgourmet.com', 'getairmail.com',
+]);
+
 serve(async (req) => {
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const body = await req.json();
+    const { email, honeypot } = body;
+
+    // ── 1. Honeypot check (server-side backup) ───────────────────────────
+    if (honeypot) {
+      // Silently succeed — bots get no indication they were blocked
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    try {
-        const { email } = await req.json();
-        if (!email || typeof email !== 'string' || !email.includes('@')) {
-            return new Response(
-                JSON.stringify({ error: 'Valid email is required' }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-        }
-
-        const supabaseAdmin = createClient(
-            Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        // 1️⃣ Upsert subscriber
-        const { error: subError } = await supabaseAdmin
-            .from('subscribers')
-            .upsert(
-                { email: email.toLowerCase().trim(), source: 'landing_page', is_active: true },
-                { onConflict: 'email' }
-            );
-
-        if (subError) {
-            console.error('Subscriber upsert error:', subError);
-            return new Response(
-                JSON.stringify({ error: 'Failed to save subscriber', detail: subError.message }),
-                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-        }
-
-        // 2️⃣ Fetch Resend API key
-        let resendKey = Deno.env.get('RESEND_API_KEY');
-        if (!resendKey) {
-            const { data } = await supabaseAdmin
-                .from('system_settings')
-                .select('value')
-                .eq('key', 'resend_api_key')
-                .single();
-            resendKey = data?.value ?? null;
-        }
-
-        // 3️⃣ Send welcome email (best-effort — don't fail the signup if email fails)
-        if (resendKey) {
-            const resendRes = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${resendKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    from: 'MAPA ✨ <noreply@asmrwithmapa.com>',
-                    to: [email],
-                    subject: "You're on the list, lovely! ✨ — ASMR with MAPA",
-                    html: buildWelcomeEmail(email),
-                }),
-            });
-
-            if (!resendRes.ok) {
-                const err = await resendRes.json();
-                console.error('Resend error (non-fatal):', err);
-            } else {
-                const data = await resendRes.json();
-                console.log('✅ Welcome email sent:', data.id);
-            }
-        } else {
-            console.warn('No RESEND_API_KEY found — subscriber saved but welcome email skipped.');
-        }
-
-        return new Response(
-            JSON.stringify({ success: true }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-
-    } catch (err) {
-        console.error('landing-subscribe error:', err);
-        return new Response(
-            JSON.stringify({ error: 'Internal server error', detail: String(err) }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+    // ── 2. Email validation ───────────────────────────────────────────────
+    if (!email || typeof email !== 'string' || !EMAIL_RE.test(email)) {
+      return new Response(
+        JSON.stringify({ error: 'Please enter a valid email address.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    const [, domain] = email.toLowerCase().split('@');
+    if (BLOCKED_DOMAINS.has(domain)) {
+      return new Response(
+        JSON.stringify({ error: 'Please use a real email address.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ── 3. IP rate limiting (max 5 per IP per 10 min) ────────────────────
+    const clientIp =
+      req.headers.get('cf-connecting-ip') ||
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      'unknown';
+
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    if (clientIp !== 'unknown') {
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { count } = await supabaseAdmin
+        .from('subscribers')
+        .select('id', { count: 'exact', head: true })
+        .eq('signup_ip', clientIp)
+        .gte('created_at', tenMinutesAgo);
+
+      if ((count ?? 0) >= 5) {
+        return new Response(
+          JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // ── 4. Upsert subscriber ──────────────────────────────────────────────
+    const cleanEmail = email.toLowerCase().trim();
+    const { error: subError } = await supabaseAdmin
+      .from('subscribers')
+      .upsert(
+        { email: cleanEmail, source: 'landing_page', is_active: true, signup_ip: clientIp },
+        { onConflict: 'email' }
+      );
+
+    if (subError) {
+      console.error('Subscriber upsert error:', subError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to save subscriber', detail: subError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ── 5. Fetch Resend API key ───────────────────────────────────────────
+    let resendKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendKey) {
+      const { data } = await supabaseAdmin
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'resend_api_key')
+        .single();
+      resendKey = data?.value ?? null;
+    }
+
+    // ── 6. Send welcome email (best-effort) ───────────────────────────────
+    if (resendKey) {
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'MAPA ✨ <noreply@asmrwithmapa.com>',
+          to: [cleanEmail],
+          subject: "You're on the list, lovely! ✨ — ASMR with MAPA",
+          html: buildWelcomeEmail(cleanEmail),
+        }),
+      });
+
+      if (!resendRes.ok) {
+        const err = await resendRes.json();
+        console.error('Resend error (non-fatal):', err);
+      } else {
+        const data = await resendRes.json();
+        console.log('✅ Welcome email sent:', data.id);
+      }
+    } else {
+      console.warn('No RESEND_API_KEY found — subscriber saved but welcome email skipped.');
+    }
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (err) {
+    console.error('landing-subscribe error:', err);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error', detail: String(err) }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 });
