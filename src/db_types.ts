@@ -72,6 +72,7 @@ export type Database = {
                     created_at: string
                     deleted_at: string | null
                     avatar_url: string | null
+                    updated_at: string
                 }
                 Insert: {
                     id: string
@@ -83,6 +84,7 @@ export type Database = {
                     created_at?: string
                     deleted_at?: string | null
                     avatar_url?: string | null
+                    updated_at?: string
                 }
                 Update: {
                     id?: string
@@ -94,6 +96,7 @@ export type Database = {
                     created_at?: string
                     deleted_at?: string | null
                     avatar_url?: string | null
+                    updated_at?: string
                 }
                 Relationships: []
             }
@@ -831,6 +834,72 @@ export type Database = {
                 }
                 Relationships: []
             }
+            analytics_sessions: {
+                Row: {
+                    id: string
+                    user_id: string | null
+                    session_fingerprint: string | null
+                    device_type: string | null
+                    os: string | null
+                    browser: string | null
+                    referrer: string | null
+                    started_at: string
+                    last_ping_at: string
+                    duration_seconds: number
+                }
+                Insert: {
+                    id?: string
+                    user_id?: string | null
+                    session_fingerprint?: string | null
+                    device_type?: string | null
+                    os?: string | null
+                    browser?: string | null
+                    referrer?: string | null
+                    started_at?: string
+                    last_ping_at?: string
+                    duration_seconds?: number
+                }
+                Update: {
+                    id?: string
+                    user_id?: string | null
+                    session_fingerprint?: string | null
+                    device_type?: string | null
+                    os?: string | null
+                    browser?: string | null
+                    referrer?: string | null
+                    started_at?: string
+                    last_ping_at?: string
+                    duration_seconds?: number
+                }
+                Relationships: []
+            }
+            analytics_events: {
+                Row: {
+                    id: string
+                    session_id: string
+                    event_type: string
+                    feature_name: string | null
+                    metadata: any | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    session_id: string
+                    event_type: string
+                    feature_name?: string | null
+                    metadata?: any | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    session_id?: string
+                    event_type?: string
+                    feature_name?: string | null
+                    metadata?: any | null
+                    created_at?: string
+                }
+                Relationships: []
+            }
         }
         Views: {
             [_ in never]: never
@@ -840,6 +909,10 @@ export type Database = {
                 Args: {
                     row_id: string
                 }
+                Returns: void
+            }
+            delete_own_account: {
+                Args: Record<string, never>
                 Returns: void
             }
         }

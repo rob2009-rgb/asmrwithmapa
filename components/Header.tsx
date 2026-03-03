@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Sun, Moon, Sparkles, User, ShoppingBag } from 'lucide-react';
+import { Sun, Moon, Sparkles, User, ShoppingBag, Shield } from 'lucide-react';
 
 interface HeaderProps {
   user?: any;
@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({
   onOpenChallenges
 }) => {
   return (
-    <header className={`sticky top-0 z-50 transition-colors duration-500 ${isNightMode ? 'bg-slate-900/90' : 'bg-white/80'} backdrop-blur-md px-4 py-3 md:px-8 border-b ${isNightMode ? 'border-slate-800' : 'border-pink-200'}`}>
+    <header className={`sticky top-0 z-50 pt-safe transition-colors duration-500 ${isNightMode ? 'bg-slate-900/90' : 'bg-white/80'} backdrop-blur-md px-4 py-3 md:px-8 border-b ${isNightMode ? 'border-slate-800' : 'border-pink-200'}`}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
 
         {/* Left: Logo */}
@@ -133,6 +133,16 @@ const Header: React.FC<HeaderProps> = ({
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {user.user_metadata?.subscription_tier === 'mapa' && (
+                  <div className="absolute -top-1 -right-1 bg-pink-500 rounded-full p-1 shadow-lg border border-white animate-pulse">
+                    <Sparkles size={10} className="text-white" />
+                  </div>
+                )}
+                {user.user_metadata?.subscription_tier === 'staff' && (
+                  <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-1 shadow-lg border border-white">
+                    <Shield size={10} className="text-white" />
+                  </div>
+                )}
               </button>
             </div>
           ) : (

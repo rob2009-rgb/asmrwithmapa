@@ -148,22 +148,56 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
     const selectedFeature = FEATURES.find(f => f.id === selectedId) || FEATURES[0];
 
     return (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose} />
+        <div className="fixed inset-0 z-[250] flex items-center justify-center md:p-4">
+            <div className="hidden md:block absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose} />
 
-            <div className="relative w-full max-w-5xl h-[90vh] md:h-[80vh] bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row pb-16 md:pb-0">
+            <div className="fixed inset-0 md:relative w-full max-w-5xl h-full md:h-[80vh] bg-slate-900 md:border border-slate-800 md:rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row pb-24 md:pb-0">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-indigo-500 to-emerald-500 z-20" />
 
-                {/* Mobile Close / Header */}
-                <div className="md:hidden p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 backdrop-blur-md z-10">
-                    <h2 className="font-black text-white px-2">Sanctuary Guide</h2>
-                    <button onClick={onClose} className="p-2 rounded-full bg-slate-800 text-slate-400">
-                        <X size={20} />
-                    </button>
+                {/* Mobile View: Vertical Feed */}
+                <div className="md:hidden flex-1 overflow-y-auto pb-24 bg-slate-900 custom-scrollbar relative flex flex-col">
+                    <div className="sticky top-0 p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/90 backdrop-blur-md z-30">
+                        <h2 className="font-black text-white px-2">Sanctuary Guide</h2>
+                        <button onClick={onClose} className="p-2 rounded-full bg-slate-800 text-slate-400">
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    <div className="p-4 space-y-4">
+                        {FEATURES.map((feature) => (
+                            <div key={feature.id} className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-lg flex flex-col gap-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center bg-pink-500/10 text-pink-400">
+                                        {feature.icon}
+                                    </div>
+                                    <div className="flex-1 pt-1">
+                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                            <h3 className="font-bold text-white text-lg leading-tight">{feature.title}</h3>
+                                            {feature.customBadge ? (
+                                                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/20">{feature.customBadge}</span>
+                                            ) : feature.pro ? (
+                                                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/20">PRO</span>
+                                            ) : (
+                                                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">FREE</span>
+                                            )}
+                                        </div>
+                                        <p className="text-slate-400 text-sm font-medium">{feature.fullDesc}</p>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80">
+                                    <h4 className="text-pink-500 text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                        <Sparkles size={12} /> The Benefit
+                                    </h4>
+                                    <p className="text-sm text-slate-300 font-bold">"{feature.benefit}"</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Sidebar (List) */}
-                <div className="w-full md:w-1/3 bg-slate-950/50 border-b md:border-b-0 md:border-r border-slate-800 flex overflow-x-auto md:overflow-y-auto md:flex-col custom-scrollbar p-2 md:p-4 gap-2 md:space-y-2 shrink-0 md:shrink-1">
+                {/* Desktop View: Split Sidebar */}
+                <div className="hidden md:flex w-full md:w-1/3 bg-slate-950/50 border-r border-slate-800 flex-col custom-scrollbar p-4 space-y-2 shrink-1 overflow-y-auto">
                     <div className="hidden md:flex justify-between items-center mb-6 pl-2 pt-2">
                         <h2 className="text-xl font-black text-white tracking-tight">Features</h2>
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">{FEATURES.length} Modules</span>
@@ -212,14 +246,14 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
                     ))}
                 </div>
 
-                {/* Main Content (Detail) */}
-                <div className="flex-1 bg-slate-900 relative flex flex-col">
+                {/* Desktop View: Main Content (Detail) */}
+                <div className="hidden md:flex flex-1 bg-slate-900 relative flex-col">
                     {/* Desktop Close */}
                     <button onClick={onClose} className="absolute top-6 right-6 hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-950/50 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-900 hover:border-slate-700 transition-all z-20">
                         <X size={16} /> <span className="text-xs font-bold uppercase tracking-widest">Close Guide</span>
                     </button>
 
-                    <div className="flex-1 overflow-y-auto p-6 md:p-16 flex flex-col justify-start md:justify-center animate-in fade-in slide-in-from-right-8 duration-500 key={selectedFeature.id}">
+                    <div className="flex-1 overflow-y-auto p-16 flex flex-col justify-center animate-in fade-in slide-in-from-right-8 duration-500 key={selectedFeature.id}">
 
                         <div className="mb-8">
                             {selectedFeature.customBadge ? (
@@ -236,32 +270,32 @@ export const FeatureGuideModal: React.FC<FeatureGuideModalProps> = ({ isOpen, on
                                 </div>
                             )}
 
-                            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight leading-tight mb-6">
+                            <h1 className="text-6xl font-black text-white tracking-tight leading-tight mb-6">
                                 {selectedFeature.title}
                             </h1>
-                            <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed max-w-2xl">
+                            <p className="text-2xl text-slate-400 font-medium leading-relaxed max-w-2xl">
                                 {selectedFeature.fullDesc}
                             </p>
                         </div>
 
-                        <div className="p-5 md:p-8 rounded-2xl md:rounded-3xl bg-slate-950/50 border border-slate-800 max-w-2xl backdrop-blur-sm mb-4">
-                            <h3 className="text-pink-500 text-xs md:text-sm font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <div className="p-8 rounded-3xl bg-slate-950/50 border border-slate-800 max-w-2xl backdrop-blur-sm mb-4">
+                            <h3 className="text-pink-500 text-sm font-black uppercase tracking-widest mb-2 flex items-center gap-2">
                                 <Sparkles size={14} /> The Benefit
                             </h3>
-                            <p className="text-base md:text-xl text-white font-bold">
+                            <p className="text-xl text-white font-bold">
                                 "{selectedFeature.benefit}"
                             </p>
                         </div>
                     </div>
 
-                    <div className="p-6 md:p-8 border-t border-slate-800 bg-slate-950/30 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
-                        <span className="text-slate-500 text-xs font-medium text-center md:text-left">
+                    <div className="p-8 border-t border-slate-800 bg-slate-950/30 flex flex-row justify-between items-center gap-4 shrink-0">
+                        <span className="text-slate-500 text-xs font-medium text-left">
                             Tip: Look for the <span className="text-pink-500">PRO</span> badge to unlock full potential.
                         </span>
-                        <div className="flex gap-4 w-full md:w-auto">
+                        <div className="flex gap-4 w-auto">
                             <button
                                 onClick={onClose}
-                                className="flex-1 md:flex-none px-8 py-4 bg-white text-slate-900 font-black text-sm uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-colors shadow-xl"
+                                className="flex-none px-8 py-4 bg-white text-slate-900 font-black text-sm uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-colors shadow-xl"
                             >
                                 Try {selectedFeature.title}
                             </button>

@@ -79,10 +79,10 @@ export const CommunityMarketplace: React.FC<CommunityMarketplaceProps> = ({ isOp
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
+        <div className="fixed inset-0 z-[120] flex items-center justify-center md:p-4">
+            <div className="hidden md:block absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose} />
 
-            <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[85vh] animate-in zoom-in-95">
+            <div className="fixed inset-0 md:relative w-full max-w-5xl bg-slate-900 md:border border-slate-800 md:rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-full md:h-[85vh] animate-in zoom-in-95">
 
                 {/* Sidebar / Navigation */}
                 <div className="w-full md:w-64 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800 p-4 md:p-6 flex flex-col md:flex-col gap-2 shrink-0 max-h-[40vh] md:max-h-full overflow-y-auto custom-scrollbar md:overflow-visible">

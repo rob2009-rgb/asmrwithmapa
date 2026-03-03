@@ -25,14 +25,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
     if (!isOpen || !product) return null;
 
     return (
-        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-0 md:p-4">
             <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity" onClick={onClose} />
 
-            <div className={`relative w-full max-w-5xl h-[90vh] md:h-[80vh] overflow-hidden rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row animate-in zoom-in-95 duration-300 ${isNightMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
+            <div className={`fixed inset-0 md:relative w-full max-w-5xl h-[100dvh] md:h-[80vh] overflow-hidden rounded-none md:rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row animate-in zoom-in-95 duration-300 ${isNightMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
 
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 z-20 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full transition-all backdrop-blur-sm shadow-lg"
+                    className="absolute top-10 md:top-6 right-6 z-20 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full transition-all backdrop-blur-sm shadow-lg"
                 >
                     <X size={24} />
                 </button>

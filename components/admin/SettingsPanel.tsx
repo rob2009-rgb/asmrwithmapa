@@ -8,7 +8,9 @@ type Setting = DBTypes['public']['Tables']['system_settings']['Row'];
 const DEFAULT_SETTINGS = [
     { key: 'fourthwall_token', description: 'Storefront Token for Fourthwall Integration' },
     { key: 'supabase_service_role_key', description: 'Supabase Service Role Key (Required for User Creation)' },
-    { key: 'resend_api_key', description: 'Resend API Key (For Transactional Emails)' }
+    { key: 'resend_api_key', description: 'Resend API Key (For Transactional Emails)' },
+    { key: 'revenuecat_apple_key', description: 'RevenueCat API Key for iOS App Store Purchases' },
+    { key: 'revenuecat_android_key', description: 'RevenueCat API Key for Google Play Store Purchases' }
 ];
 
 const SettingsPanel: React.FC = () => {

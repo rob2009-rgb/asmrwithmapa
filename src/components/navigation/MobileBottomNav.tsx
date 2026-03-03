@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Book, Trophy, Users, Moon } from 'lucide-react';
+import { Compass, Book, Trophy, Users, Wind } from 'lucide-react';
 
 interface MobileBottomNavProps {
     isNightMode: boolean;
@@ -46,7 +46,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                                 ? 'bg-pink-600 border-slate-900 text-white shadow-pink-900/50'
                                 : 'bg-pink-500 border-white text-white shadow-pink-500/30'}`}
                     >
-                        <Moon size={24} />
+                        <Wind size={24} />
                         {!isPremium && (
                             <span className="absolute -bottom-1 bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-600 shadow-sm">
                                 PRO

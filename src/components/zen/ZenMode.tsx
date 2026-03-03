@@ -76,7 +76,7 @@ export const ZenMode: React.FC<ZenModeProps> = ({
     if (!isActive) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-950 text-white flex flex-col items-center justify-start overflow-y-auto animate-in fade-in duration-1000 no-scrollbar">
+        <div className="fixed inset-0 h-[100dvh] md:h-screen z-[100] bg-slate-950 text-white flex flex-col items-center justify-start overflow-y-auto animate-in fade-in duration-1000 no-scrollbar">
             {/* Cinematic Multilayered Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] rounded-full blur-[160px] transition-all duration-1000 ease-in-out ${playerState === PlayerState.PLAYING ? 'bg-blue-600/10 scale-125 opacity-40 animate-pulse-slow' : 'bg-slate-800/10 scale-100 opacity-20'

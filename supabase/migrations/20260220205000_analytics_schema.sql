@@ -33,12 +33,7 @@ CREATE POLICY "Users can view their own sessions"
 -- Admins can view all sessions
 CREATE POLICY "Admins can view all analytics sessions"
     ON public.analytics_sessions FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM user_roles
-            WHERE user_id = auth.uid() AND role IN ('admin', 'super_admin')
-        )
-    );
+    USING ( is_admin() );
 
 
 
@@ -70,9 +65,4 @@ CREATE POLICY "Anyone can insert analytics events"
 -- Admins can view all events
 CREATE POLICY "Admins can view all analytics events"
     ON public.analytics_events FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM user_roles
-            WHERE user_id = auth.uid() AND role IN ('admin', 'super_admin')
-        )
-    );
+    USING ( is_admin() );

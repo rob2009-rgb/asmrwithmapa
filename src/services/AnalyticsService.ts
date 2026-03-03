@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { logError } from '../utils/logger';
 
 function generateUUID() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -192,6 +193,18 @@ class AnalyticsServiceImpl {
 
     public trackError(feature_name: string, errorMetadata: Record<string, any>) {
         this.trackEvent('error', feature_name, errorMetadata);
+
+        // Also log to the dedicated error_logs table
+        logError({
+            message: `${feature_name}: ${errorMetadata.message || 'System error detected'}`,
+            error: errorMetadata,
+            severity: 'error',
+            context: {
+                session_id: this.sessionId,
+                path: window.location.pathname,
+                ...errorMetadata
+            }
+        });
     }
 
     public async flush() {

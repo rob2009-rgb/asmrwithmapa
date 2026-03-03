@@ -150,7 +150,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ isOpen, onClose, isPre
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[500] bg-slate-950 text-white overflow-y-auto">
+        <div className="fixed inset-0 z-[500] bg-slate-950 text-white overflow-y-auto font-sans">
+            {/* Show consent banner on standalone landing page */}
+            {!isPreview && <ConsentBanner />}
 
             {/* Top Navigation Bar */}
             <nav className="fixed top-0 inset-x-0 z-[600] flex items-center justify-between px-6 py-4 backdrop-blur-md bg-slate-950/70 border-b border-white/5">

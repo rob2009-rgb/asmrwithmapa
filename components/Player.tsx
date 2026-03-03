@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Play, Pause, Square, SkipBack, SkipForward, Repeat, Shuffle, CloudRain, AlertCircle, Loader2, ChevronUp, ChevronDown, Minimize2, Maximize2, Clock, Heart, Users, Mic, MicOff, Crosshair, Sparkles, Waves, Zap, Lock, Headset, X, Activity, HelpCircle } from 'lucide-react';
+import { Play, Pause, Square, SkipBack, SkipForward, Repeat, Shuffle, CloudRain, AlertCircle, Loader2, ChevronUp, ChevronDown, ChevronRight, Minimize2, Maximize2, Clock, Heart, Users, Mic, MicOff, Crosshair, Sparkles, Waves, Zap, Lock, Headset, X, Activity, HelpCircle } from 'lucide-react';
 import { SoundCategory, PlayerState, SoundItem, PlayerHandle } from '../types';
 import { RAIN_SOUND_URL } from '../constants';
 import { BackgroundAudioService } from '../src/services/BackgroundAudioService';
@@ -112,6 +112,7 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(({
   const [isRemoteUpdate, setIsRemoteUpdate] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [openToolsMenu, setOpenToolsMenu] = useState(false);
+  const [isMobileToolsDrawerOpen, setIsMobileToolsDrawerOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // Sleep Timer State
@@ -586,7 +587,7 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(({
         <div
           onMouseEnter={registerInteraction}
           onClick={() => setIsMinimized(false)}
-          className={`fixed bottom-6 right-4 md:right-8 z-[60] cursor-pointer transition-all duration-500 animate-in slide-in-from-bottom-10 fade-in zoom-in-95 group`}
+          className={`fixed bottom-24 md:bottom-6 right-4 md:right-8 z-[60] cursor-pointer transition-all duration-500 animate-in slide-in-from-bottom-10 fade-in zoom-in-95 group`}
         >
           <div className={`relative flex items-center p-2 pr-4 rounded-full shadow-2xl backdrop-blur-xl border border-white/10 overflow-hidden ${isNightMode ? 'bg-slate-900/90 text-white shadow-black/50' : 'bg-white/90 text-slate-800 shadow-pink-200/50'
             }`}>
@@ -627,23 +628,26 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(({
           onMouseEnter={registerInteraction}
           onMouseMove={registerInteraction}
           onTouchStart={registerInteraction}
-          className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-500 animate-in slide-in-from-bottom-full`}
+          className={`fixed bottom-0 left-0 right-0 z-[45] transition-all duration-500 animate-in slide-in-from-bottom-full`}
         >
           {/* Container with "Breathing" Glow when Playing */}
-          <div className={`relative p-4 md:p-6 backdrop-blur-xl border-t transition-all duration-700 rounded-t-[3rem]
+          <div className={`relative p-6 pt-12 md:pt-6 pb-24 md:pb-6 backdrop-blur-xl border-t transition-all duration-700 rounded-t-[3rem] overflow-hidden md:overflow-visible
             ${isVisualizerActive ? 'bg-slate-950/90 border-pink-500/50 min-h-[140px]' : isNightMode ? 'bg-slate-900/95 border-slate-700' : 'bg-white/95 border-pink-200'}
             ${playerState === PlayerState.PLAYING ? 'shadow-[0_-5px_30px_-5px_rgba(236,72,153,0.3)]' : 'shadow-[0_-10px_40px_rgba(0,0,0,0.1)]'}
           `}>
-            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-t-[3rem]">
+            {/* Visualizer Background (Now covers the entire player) */}
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
               <VisualizerSpectrum isActive={isVisualizerActive} isEmbedded={true} />
             </div>
-            {/* Minimize Handle */}
+
+            {/* Minimize Handle (Moved INSIDE the player) */}
             <button
               onClick={() => setIsMinimized(true)}
-              className="absolute -top-10 right-4 bg-pink-500 text-white px-4 py-2 rounded-t-xl font-bold text-xs flex items-center space-x-2 shadow-lg hover:bg-pink-600 transition-colors"
+              className={`absolute top-4 right-6 p-2 rounded-full font-bold flex items-center justify-center transition-colors z-[60] shadow-sm 
+                ${isNightMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:text-pink-600 hover:bg-pink-50'}`}
+              title="Minimize Player"
             >
-              <Minimize2 size={14} />
-              <span className="hidden sm:inline">Minimize</span>
+              <Minimize2 size={16} />
             </button>
 
             {error && (
@@ -656,17 +660,17 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(({
             {isVisualizerActive && (
               <button
                 onClick={() => setIsVisualizerActive(false)}
-                className="absolute -top-10 left-4 bg-slate-900 text-white px-4 py-2 rounded-t-xl font-bold text-xs flex items-center space-x-2 shadow-lg border-t border-x border-pink-500/50 hover:bg-slate-800 transition-colors z-[60]"
+                className="absolute top-4 left-6 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-widest flex items-center space-x-1 border border-pink-500/30 hover:bg-slate-800 transition-colors z-[60]"
               >
-                <X size={14} className="text-pink-500" />
-                <span>Exit Visualizer</span>
+                <X size={12} className="text-pink-500" />
+                <span>Exit Vis</span>
               </button>
             )}
 
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
 
               {/* LEFT: Track Info */}
-              <div className="flex items-center space-x-5 w-full md:w-1/3">
+              <div className="flex flex-col md:flex-row items-center text-center md:text-left space-y-4 md:space-y-0 md:space-x-5 w-full md:w-1/3 mt-2 md:mt-0">
                 {!currentSound ? (
                   <>
                     <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-3xl shadow-lg border-2 border-dashed border-pink-200 bg-pink-50 text-pink-300">
@@ -722,7 +726,7 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(({
               </div>
 
               {/* CENTER: Controls & Progress */}
-              <div className={`flex flex-col items-center w-full md:w-1/3 space-y-4 transition-opacity duration-300 ${!currentSound ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+              <div className={`flex flex-col items-center w-full md:w-1/3 lg:w-2/5 space-y-4 md:space-y-6 transition-opacity duration-300 ${!currentSound ? 'opacity-30 pointer-events-none' : 'opacity-100'} px-2 md:px-0`}>
                 <div className="flex items-center space-x-6">
                   <button
                     onClick={() => setIsShuffled(!isShuffled)}
@@ -779,8 +783,8 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(({
                 </div>
               </div>
 
-              {/* RIGHT: Essential Tools & Pro Menu */}
-              <div className="flex items-center justify-center md:justify-end gap-3 w-full md:w-1/3 mt-4 md:mt-0 relative">
+              {/* RIGHT: Essential Tools & Pro Menu (Desktop) */}
+              <div className="hidden md:flex items-center justify-end gap-3 w-1/3 relative">
 
                 {/* Rain Toggle */}
                 <button
@@ -1019,10 +1023,209 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(({
                   )}
                 </div>
               </div>
+
+              {/* Mobile: Tools Drawer Handle */}
+              <div className="md:hidden w-full flex justify-center mt-4">
+                <button
+                  onClick={() => setIsMobileToolsDrawerOpen(true)}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-300 shadow-xl active:scale-95 text-white backdrop-blur-md border border-white/10 ${isNightMode ? 'bg-slate-800' : 'bg-slate-900/40'}`}
+                >
+                  <Sparkles size={16} className="text-pink-400" />
+                  <span className="tracking-widest uppercase text-xs">Tools & Settings</span>
+                  <ChevronUp size={16} className="opacity-50" />
+                </button>
+              </div>
+
             </div>
+
           </div>
         </div >
       )}
+
+      {/* --- MOBILE TOOLS DRAWER --- */}
+      <div
+        className={`fixed inset-0 z-[80] md:hidden transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isMobileToolsDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+          onClick={() => setIsMobileToolsDrawerOpen(false)}
+        />
+
+        {/* Sheet */}
+        <div
+          className={`absolute bottom-0 left-0 right-0 max-h-[85vh] flex flex-col bg-slate-900 border-t border-slate-800 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isMobileToolsDrawerOpen ? 'translate-y-0' : 'translate-y-full'}`}
+        >
+          {/* Drag Handle Area */}
+          <div
+            className="w-full pt-4 pb-2 flex justify-center cursor-pointer"
+            onClick={() => setIsMobileToolsDrawerOpen(false)}
+          >
+            <div className="w-12 h-1.5 bg-slate-700/70 rounded-full" />
+          </div>
+
+          {/* Header */}
+          <div className="px-6 pb-4 flex items-center justify-between border-b border-slate-800/50">
+            <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+              <Sparkles size={20} className="text-pink-500" />
+              Pro Suite
+            </h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setIsMobileToolsDrawerOpen(false);
+                  setIsMinimized(true);
+                }}
+                className="p-3 bg-slate-800/80 rounded-full text-slate-400 hover:text-white transition-colors shadow-lg active:scale-90"
+                title="Minimize Player"
+              >
+                <Minimize2 size={18} />
+              </button>
+              <button
+                onClick={() => setIsMobileToolsDrawerOpen(false)}
+                className="p-3 bg-slate-800/80 rounded-full text-slate-400 hover:text-white transition-colors shadow-lg active:scale-90"
+                title="Close Drawer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable Tools Grid */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 pb-32">
+
+            {/* Core Toggles */}
+            <div className="grid grid-cols-4 gap-3">
+              {/* Rain */}
+              <button onClick={onToggleRain} className={`flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl transition-all shadow-sm active:scale-95 ${rainLayerActive ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-blue-500/10' : 'bg-slate-800 text-slate-400 border border-transparent'}`}>
+                <CloudRain size={28} className={rainLayerActive ? 'animate-bounce-subtle' : ''} />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Rain</span>
+              </button>
+
+              {/* Sleep */}
+              <button onClick={toggleSleep} className={`flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl transition-all shadow-sm active:scale-95 ${sleepTimer > 0 ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shadow-indigo-500/10' : 'bg-slate-800 text-slate-400 border border-transparent'} relative`}>
+                <Clock size={28} />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Sleep</span>
+                {sleepTimer > 0 && <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/50 border border-slate-900 border-2" />}
+              </button>
+
+              {/* Voice */}
+              <button onClick={onToggleVoice} className={`flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl transition-all shadow-sm active:scale-95 ${isVoiceActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 border border-transparent'}`}>
+                <Mic size={28} className={isVoiceActive ? "animate-pulse" : ""} />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Voice</span>
+              </button>
+
+              {/* Bio-Sync */}
+              <button onClick={() => setIsBioSyncOpen(!isBioSyncOpen)} className={`flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl transition-all shadow-sm active:scale-95 ${isBioSyncOpen ? 'bg-red-500/20 text-red-400 border border-red-500/30 shadow-red-500/10' : 'bg-slate-800 text-slate-400 border border-transparent'}`}>
+                <Activity size={28} className={isBioSyncOpen ? "animate-pulse" : ""} />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Vitals</span>
+              </button>
+            </div>
+
+            {/* Rain slider if active */}
+            {rainLayerActive && (
+              <div className="p-5 bg-slate-800/40 rounded-3xl border border-slate-700/50 shadow-inner animate-in fade-in slide-in-from-top-4">
+                <div className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <CloudRain size={14} className="text-blue-400" /> Rain Volume
+                </div>
+                <input
+                  type="range" min="0" max="1" step="0.01"
+                  className="w-full accent-blue-500 h-2 bg-slate-700 rounded-full appearance-none cursor-pointer"
+                  value={rainVolume}
+                  onChange={(e) => onRainVolumeChange(parseFloat(e.target.value))}
+                />
+              </div>
+            )}
+
+            {/* BioSync Control Header if active */}
+            {isBioSyncOpen && (
+              <div className="p-5 bg-slate-800/40 rounded-3xl border border-slate-700/50 shadow-inner animate-in fade-in slide-in-from-top-4">
+                <BioSyncControl isPremium={isPremium} onOpenPremium={onOpenPremium || (() => { })} isNightMode={isNightMode} />
+              </div>
+            )}
+
+            {/* Pro Suite List */}
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 pb-1 pl-2">Premium Features</h4>
+
+              {/* Ask Mapa */}
+              <button onClick={() => { isPremium ? onOpenAskMapa?.() : onOpenPremium?.(); setIsMobileToolsDrawerOpen(false); }} className="w-full flex items-center gap-4 p-4 rounded-3xl bg-slate-800/50 hover:bg-slate-800 transition-colors border border-slate-700/50 active:scale-[0.98]">
+                <div className="p-3 bg-pink-500/20 text-pink-400 rounded-2xl"><Sparkles size={24} /></div>
+                <div className="flex-1 text-left">
+                  <div className="font-bold text-white text-base mb-0.5">Ask Mapa AI</div>
+                  <div className="text-xs text-slate-400">Context-aware AI assistance</div>
+                </div>
+                {!isPremium && <Lock size={16} className="text-amber-500" />}
+              </button>
+
+              {/* 8D Audio */}
+              <button onClick={() => { isPremium ? setIsSpatial(!isSpatial) : onOpenPremium?.(); }} className={`w-full flex items-center gap-4 p-4 rounded-3xl transition-all border active:scale-[0.98] ${isSpatial ? 'bg-amber-500/10 border-amber-500/30' : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800'}`}>
+                <div className={`p-3 rounded-2xl transition-colors ${isSpatial ? 'bg-amber-500 text-slate-900' : 'bg-amber-500/20 text-amber-500'}`}><Headset size={24} /></div>
+                <div className="flex-1 text-left">
+                  <div className={`font-bold text-base mb-0.5 transition-colors ${isSpatial ? 'text-amber-400' : 'text-white'}`}>8D Spatial Audio</div>
+                  <div className={`text-xs transition-colors ${isSpatial ? 'text-amber-500/70' : 'text-slate-400'}`}>{isSpatial ? 'Immersive tracking active' : 'Enable 360° sound field'}</div>
+                </div>
+                {/* Status Toggle Look */}
+                <div className={`w-12 h-7 rounded-full flex items-center px-1 transition-colors ${isSpatial ? 'bg-amber-500' : 'bg-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full bg-white transition-transform ${isSpatial ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </button>
+
+              {/* Visualizer */}
+              <button onClick={() => setIsVisualizerActive(!isVisualizerActive)} className={`w-full flex items-center gap-4 p-4 rounded-3xl transition-all border active:scale-[0.98] ${isVisualizerActive ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800'}`}>
+                <div className={`p-3 rounded-2xl transition-colors ${isVisualizerActive ? 'bg-cyan-500 text-slate-900' : 'bg-cyan-500/20 text-cyan-500'}`}><Waves size={24} /></div>
+                <div className="flex-1 text-left">
+                  <div className={`font-bold text-base mb-0.5 transition-colors ${isVisualizerActive ? 'text-cyan-400' : 'text-white'}`}>Audio Visualizer</div>
+                  <div className={`text-xs transition-colors ${isVisualizerActive ? 'text-cyan-500/70' : 'text-slate-400'}`}>Mesmerizing spectrum waves</div>
+                </div>
+                <div className={`w-12 h-7 rounded-full flex items-center px-1 transition-colors ${isVisualizerActive ? 'bg-cyan-500' : 'bg-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full bg-white transition-transform ${isVisualizerActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </button>
+
+              {/* Haptic */}
+              <button onClick={() => setIsHapticActive(!isHapticActive)} className={`w-full flex items-center gap-4 p-4 rounded-3xl transition-all border active:scale-[0.98] ${isHapticActive ? 'bg-orange-500/10 border-orange-500/30' : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800'}`}>
+                <div className={`p-3 rounded-2xl transition-colors ${isHapticActive ? 'bg-orange-500 text-slate-900' : 'bg-orange-500/20 text-orange-500'}`}><Zap size={24} /></div>
+                <div className="flex-1 text-left">
+                  <div className={`font-bold text-base mb-0.5 transition-colors ${isHapticActive ? 'text-orange-400' : 'text-white'}`}>Haptic Rhythm</div>
+                  <div className={`text-xs transition-colors ${isHapticActive ? 'text-orange-500/70' : 'text-slate-400'}`}>Feel the frequency</div>
+                </div>
+                <div className={`w-12 h-7 rounded-full flex items-center px-1 transition-colors ${isHapticActive ? 'bg-orange-500' : 'bg-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full bg-white transition-transform ${isHapticActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+              </button>
+
+              {/* Listen Party */}
+              <button onClick={() => { setIsListenPartyModalOpen(true); setIsMobileToolsDrawerOpen(false); }} className={`w-full flex items-center gap-4 p-4 rounded-3xl transition-all border active:scale-[0.98] ${sessionId ? 'bg-pink-500/10 border-pink-500/30' : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800'}`}>
+                <div className={`p-3 rounded-2xl transition-colors ${sessionId ? 'bg-pink-500 text-white' : 'bg-pink-500/20 text-pink-500'}`}><Users size={24} /></div>
+                <div className="flex-1 text-left">
+                  <div className={`font-bold text-base mb-0.5 transition-colors ${sessionId ? 'text-pink-400' : 'text-white'}`}>Listen Party</div>
+                  <div className={`text-xs transition-colors ${sessionId ? 'text-pink-500/70' : 'text-slate-400'}`}>{sessionId ? 'Session Active' : 'Sync listening with friends'}</div>
+                </div>
+                <ChevronRight size={20} className={sessionId ? 'text-pink-500' : 'text-slate-500'} />
+              </button>
+            </div>
+
+            {/* Help */}
+            <div className="pt-4 pb-10 flex flex-col items-center gap-4 relative">
+              <button onClick={() => setIsHelpOpen(!isHelpOpen)} className={`flex items-center gap-2 text-sm font-bold transition-colors uppercase tracking-widest px-6 py-3 rounded-full border ${isHelpOpen ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-500/20' : 'text-slate-400 hover:text-white border-slate-700/50'}`}>
+                <HelpCircle size={16} /> Help & Guide
+              </button>
+              {isHelpOpen && (
+                <div className="w-full relative z-40 animate-in slide-in-from-top-2 duration-200 mt-2 flex justify-center">
+                  <ContextualHelp
+                    isOpen={true}
+                    onClose={() => setIsHelpOpen(false)}
+                    context="audio"
+                    isNightMode={isNightMode}
+                  />
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
 
       {
         creator && (

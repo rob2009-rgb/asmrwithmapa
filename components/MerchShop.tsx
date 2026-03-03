@@ -57,7 +57,12 @@ const MerchShop: React.FC<MerchShopProps> = ({ onClose, isNightMode }) => {
 
   const fetchProducts = async () => {
     try {
-      const fwProducts = await FourthwallService.getProducts();
+      let fwProducts: any[] = [];
+      try {
+        fwProducts = await FourthwallService.getProducts();
+      } catch (fwError) {
+        console.warn('Fourthwall API skipped/failed, falling back to local DB:', fwError);
+      }
 
       if (fwProducts.length > 0) {
         setProducts(fwProducts.map(p => ({
@@ -160,40 +165,40 @@ const MerchShop: React.FC<MerchShopProps> = ({ onClose, isNightMode }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-8">
       <div
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
+        className="hidden md:block absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
         onClick={onClose}
       />
 
-      <div className={`relative w-full max-w-7xl h-full md:h-[90vh] overflow-hidden rounded-none md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row transition-all duration-500 ${isNightMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
+      <div className={`fixed inset-0 md:relative w-full max-w-7xl md:h-[90vh] md:overflow-hidden md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row transition-all duration-500 z-10 overflow-y-auto ${isNightMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-h-full min-w-0 md:h-full">
           {/* Header */}
-          <div className={`p-6 border-b flex items-center justify-between ${isNightMode ? 'border-slate-800' : 'border-pink-50'}`}>
-            <div className="flex items-center space-x-3">
-              <h2 className="text-3xl font-brand font-black text-pink-600 tracking-tighter">THE SANCTUARY SHOP</h2>
-              <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm">Collection 2026</span>
+          <div className={`p-5 md:p-6 border-b flex items-center justify-between gap-4 ${isNightMode ? 'border-slate-800' : 'border-pink-50'}`}>
+            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 flex-1 min-w-0">
+              <h2 className="text-2xl md:text-3xl font-brand font-black text-pink-600 tracking-tighter truncate">THE SANCTUARY SHOP</h2>
+              <span className="bg-pink-100 text-pink-600 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] shadow-sm w-fit shrink-0">Collection 2026</span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4 shrink-0">
               <button
                 onClick={() => setShowCart(!showCart)}
-                className="relative p-3 bg-pink-500 text-white rounded-2xl shadow-lg hover:bg-pink-600 transition-all active:scale-95 group"
+                className="relative p-2.5 md:p-3 bg-pink-500 text-white rounded-xl md:rounded-2xl shadow-lg hover:bg-pink-600 transition-all active:scale-95 group"
               >
-                <ShoppingCart size={20} />
+                <ShoppingCart size={20} className="md:w-[20px] w-[18px]" />
                 {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-white text-pink-500 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">
+                  <span className="absolute -top-1 -right-1 bg-white text-pink-500 w-4 h-4 md:w-5 md:h-5 rounded-full text-[9px] md:text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">
                     {cart.reduce((a, b) => a + b.quantity, 0)}
                   </span>
                 )}
               </button>
-              <button onClick={onClose} className={`p-3 rounded-2xl transition-all hover:bg-red-50 hover:text-red-500 ${isNightMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600'}`}>
-                <X size={20} />
+              <button onClick={onClose} className={`p-2.5 md:p-3 rounded-xl md:rounded-2xl transition-all hover:bg-red-50 hover:text-red-500 ${isNightMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600'}`}>
+                <X size={20} className="md:w-[20px] w-[18px]" />
               </button>
             </div>
           </div>
 
           {/* Shop Body */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 space-y-10">
+          <div className="flex-1 md:overflow-y-auto custom-scrollbar p-6 md:p-10 space-y-10 pb-24 md:pb-10">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-full py-40">
                 <Loader className="animate-spin text-pink-500 mb-4" size={48} />
@@ -306,23 +311,49 @@ const MerchShop: React.FC<MerchShopProps> = ({ onClose, isNightMode }) => {
           </div>
         </div>
 
-        {/* Persistent Cart Sidebar */}
-        <div className={`w-full md:w-[400px] border-l transform transition-all duration-[600ms] cubic-bezier(0.4, 0, 0.2, 1) flex flex-col ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-pink-50/30 border-pink-100'} ${showCart ? 'translate-x-0 opacity-100' : 'translate-x-full md:translate-x-0 md:w-0 overflow-hidden md:opacity-0'}`}>
-          <div className="p-8 flex-1 flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-10">
-              <h3 className="text-2xl font-black tracking-tight">YOUR BASKET</h3>
+        {/* Mobile Backdrop for Drawer */}
+        <div
+          className={`md:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[60] transition-opacity duration-500 ${showCart ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setShowCart(false)}
+        />
+
+        {/* Persistent Cart Sidebar (Desktop) / Slide-Up Drawer (Mobile) */}
+        <div className={`
+          border-l transform transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col 
+          ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-pink-50 border-pink-100'} 
+          
+          /* Mobile Drawer Styles */
+          fixed inset-x-0 bottom-0 z-[70] h-[85vh] rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.3)]
+          ${showCart ? 'translate-y-0' : 'translate-y-full'}
+          
+          /* Desktop Sidebar Styles */
+          md:relative md:inset-auto md:z-auto md:h-full md:w-[400px] md:rounded-none md:shadow-none pointer-events-auto
+          ${showCart ? 'md:translate-x-0' : 'md:translate-x-full md:w-0 md:border-none md:opacity-0'}
+        `}>
+
+          {/* Mobile Drawer Drag Handle */}
+          <div className="md:hidden w-full pt-4 pb-2 flex justify-center" onClick={() => setShowCart(false)}>
+            <div className="w-12 h-1.5 bg-slate-700/30 rounded-full" />
+          </div>
+
+          <div className="p-6 md:p-8 flex-1 flex flex-col min-h-0">
+            <div className="flex items-center justify-between mb-8 md:mb-10 border-b md:border-none border-white/10 pb-4 md:pb-0">
+              <h3 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                <ShoppingCart size={24} className="text-pink-500" />
+                YOUR BASKET
+              </h3>
               <button
                 onClick={() => setShowCart(false)}
-                className={`md:hidden p-2 rounded-full ${isNightMode ? 'hover:bg-slate-800' : 'hover:bg-slate-200'}`}
+                className={`p-3 rounded-full hover:scale-110 active:scale-90 transition-all ${isNightMode ? 'bg-slate-800 text-slate-400 hover:text-white' : 'bg-white text-slate-500 hover:text-pink-500 shadow-sm'}`}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2 pb-8 md:pb-0 custom-scrollbar">
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-400 text-center space-y-4">
-                  <ShoppingBag size={48} className="opacity-10 mb-2" />
+                  <ShoppingBag size={48} className="opacity-20 mb-2" />
                   <p className="text-xs font-black uppercase tracking-widest">Basket is longing for treasures</p>
                 </div>
               ) : (
@@ -331,18 +362,18 @@ const MerchShop: React.FC<MerchShopProps> = ({ onClose, isNightMode }) => {
                     <div className="w-20 h-24 bg-slate-200 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-white/10">
                       <img src={item.image_url} className="w-full h-full object-cover" />
                     </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
+                    <div className="flex-1 flex flex-col justify-between py-1 border-b border-transparent group-hover:border-slate-800/20 transition-colors pb-2">
                       <div>
-                        <h4 className="font-bold text-sm leading-tight text-pink-600 mb-1">{item.name}</h4>
-                        <p className="text-xs font-mono text-slate-500">${item.price.toFixed(2)}</p>
+                        <h4 className="font-bold text-sm leading-tight text-pink-500 mb-1 line-clamp-2">{item.name}</h4>
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${isNightMode ? 'text-slate-500' : 'text-slate-400'}`}>${item.price.toFixed(2)}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className={`flex items-center rounded-xl border p-1 ${isNightMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'}`}>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className={`flex items-center rounded-xl border p-1 ${isNightMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
                           <button onClick={() => updateCartQuantity(item.id, -1)} className="w-6 h-6 flex items-center justify-center hover:text-pink-500 transition-colors">-</button>
                           <span className="w-8 text-center text-xs font-black">{item.quantity}</span>
                           <button onClick={() => updateCartQuantity(item.id, 1)} className="w-6 h-6 flex items-center justify-center hover:text-pink-500 transition-colors">+</button>
                         </div>
-                        <button onClick={() => updateCartQuantity(item.id, -999)} className="text-[10px] font-black uppercase text-slate-400 hover:text-red-500 tracking-widest">Remove</button>
+                        <button onClick={() => updateCartQuantity(item.id, -999)} className="text-[10px] font-black uppercase text-slate-400 hover:text-red-500 tracking-widest active:scale-95 transition-transform">Remove</button>
                       </div>
                     </div>
                   </div>
@@ -350,9 +381,9 @@ const MerchShop: React.FC<MerchShopProps> = ({ onClose, isNightMode }) => {
               )}
             </div>
 
-            <div className={`mt-8 pt-8 border-t space-y-6 ${isNightMode ? 'border-slate-800' : 'border-pink-100'}`}>
+            <div className={`mt-6 pt-6 border-t border-slate-800/30 space-y-6 ${isNightMode ? 'border-slate-800' : 'border-pink-200'}`}>
               <div className="flex justify-between items-end">
-                <span className="text-xs font-black uppercase tracking-widest text-slate-500">Subtotal</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Subtotal</span>
                 <span className="text-3xl font-black tracking-tighter text-pink-500">
                   ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
                 </span>
@@ -360,7 +391,7 @@ const MerchShop: React.FC<MerchShopProps> = ({ onClose, isNightMode }) => {
               <button
                 disabled={cart.length === 0 || isCheckingOut}
                 onClick={handleCheckout}
-                className="w-full py-5 bg-pink-500 hover:bg-pink-600 disabled:bg-slate-400 text-white rounded-3xl font-black tracking-[0.2em] text-sm shadow-2xl transition-all transform active:scale-95 flex items-center justify-center gap-3 group overflow-hidden relative"
+                className="w-full py-5 bg-gradient-to-r from-pink-500 to-rose-500 hover:brightness-110 disabled:bg-slate-500 disabled:from-slate-500 disabled:to-slate-600 border border-white/10 text-white rounded-2xl font-black tracking-[0.2em] text-sm shadow-xl shadow-pink-500/20 transition-all transform active:scale-95 flex items-center justify-center gap-3 group"
               >
                 {isCheckingOut ? (
                   <Loader className="animate-spin" size={20} />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AppTrackingTransparency } from '@capgo/capacitor-app-tracking-transparency';
 import { supabase } from './src/supabaseClient';
 import Header from './components/Header';
 import Player from './components/Player';
@@ -29,6 +30,7 @@ import { LandingPage } from './components/LandingPage';
 import { AnalyticsService } from './src/services/AnalyticsService';
 import { ConsentBanner } from './src/components/ui/ConsentBanner';
 import { MobileBottomNav } from './src/components/navigation/MobileBottomNav';
+import { PaywallService } from './src/services/PaywallService';
 
 const App: React.FC = () => {
   const playerRef = React.useRef<PlayerHandle>(null);
@@ -38,9 +40,9 @@ const App: React.FC = () => {
   const [activeVariationIndex, setActiveVariationIndex] = useState(0);
   const { streak } = useStreaks(user?.id);
 
+  const [offerings, setOfferings] = useState<any[]>([]);
   const [isAskMapaOpen, setIsAskMapaOpen] = useState(false);
   const [askMapaInitialMessage, setAskMapaInitialMessage] = useState('');
-
   const [prefs, setPrefs] = useState<UserPreferences>({
     isNightMode: false,
     isPremiumUser: false,
@@ -86,6 +88,9 @@ const App: React.FC = () => {
     // Feature 3 & 5: Track App Init
     AnalyticsService.trackView('app_home');
 
+    // iOS App Tracking Transparency
+    AppTrackingTransparency.requestPermission().catch(console.error);
+
     function handleSession(session: any) {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -93,8 +98,11 @@ const App: React.FC = () => {
           .then(({ data }) => {
             if (data) {
               const profile = data as { subscription_tier: string, role?: string };
-              const isPremium = profile.subscription_tier === 'premium' || profile.subscription_tier === 'paid';
+              const isPremium = ['premium', 'paid', 'mapa', 'staff'].includes(profile.subscription_tier?.toLowerCase()) || profile.role === 'admin';
               setPrefs(prev => ({ ...prev, isPremiumUser: isPremium }));
+
+              // Initialize Native IAP
+              PaywallService.initialize(session.user.id);
 
               // Merge role into user object for Header check
               setUser((current: any) => ({ ...current, ...session.user, role: profile.role }));
@@ -130,6 +138,21 @@ const App: React.FC = () => {
   const toggleNightMode = () => setPrefs(prev => ({ ...prev, isNightMode: !prev.isNightMode }));
   const toggleRain = () => setPrefs(prev => ({ ...prev, isRainActive: !prev.isRainActive }));
   const setRainVolume = (val: number) => setPrefs(prev => ({ ...prev, rainLayerVolume: val }));
+
+  // Fetch offerings when premium modal opens
+  useEffect(() => {
+    if (isPremiumModalOpen) {
+      PaywallService.getOfferings().then(setOfferings);
+    }
+  }, [isPremiumModalOpen]);
+
+  const handlePurchase = async (pkg: any) => {
+    const success = await PaywallService.purchase(pkg);
+    if (success) {
+      setIsPremiumModalOpen(false);
+      // handleSession will automatically pick up the new tier via the DB sync
+    }
+  };
   // NOTE: Premium status is read-only — set server-side by handleSession from Supabase profile.
   // The client MUST NOT toggle it locally (would be trivially exploitable).
 
@@ -211,7 +234,7 @@ const App: React.FC = () => {
         currentCategoryId={currentSound?.id}
       />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-8 md:py-16 w-full pb-32 lg:pb-48">
+      <main className={`flex-1 max-w-7xl mx-auto px-4 py-8 md:py-16 w-full ${currentSound ? 'pb-32 lg:pb-40' : 'pb-12'}`}>
         <section className="text-center mb-20 space-y-10 animate-in fade-in slide-in-from-top-4 duration-1000 relative">
           {/* Ambient Background Glow for Hero */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-64 bg-pink-500/10 blur-[120px] pointer-events-none -z-10" />
@@ -357,17 +380,22 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        <div className="mt-20 pt-10 border-t border-white/10 text-center pb-10 space-y-3">
+        <div className="mt-12 pt-8 border-t border-white/10 text-center pb-6 space-y-3">
           <p className={`text-[10px] opacity-30 ${prefs.isNightMode ? 'text-white' : 'text-slate-900'}`}>
             &copy; {new Date().getFullYear()} ASMR with MAPA. All rights reserved.
           </p>
-          <button
-            onClick={() => setIsLandingOpen(true)}
-            className={`text-[10px] font-bold underline underline-offset-2 opacity-40 hover:opacity-80 transition-opacity ${prefs.isNightMode ? 'text-pink-400' : 'text-pink-600'
-              }`}
-          >
-            ✦ Preview Launch Page
-          </button>
+          <div className="flex flex-wrap justify-center items-center gap-4 text-[10px] font-bold uppercase tracking-widest opacity-40">
+            <a href="/landing/privacy.html" className="hover:text-pink-500 hover:opacity-100 transition-all">Privacy Policy</a>
+            <span className="w-1 h-1 bg-current rounded-full opacity-20" />
+            <a href="/landing/terms.html" className="hover:text-pink-500 hover:opacity-100 transition-all">Terms & Conditions</a>
+            <span className="w-1 h-1 bg-current rounded-full opacity-20" />
+            <button
+              onClick={() => setIsLandingOpen(true)}
+              className="underline underline-offset-2 hover:text-pink-500 hover:opacity-100 transition-all"
+            >
+              ✦ Preview Launch Page
+            </button>
+          </div>
         </div>
       </main>
 
@@ -427,17 +455,29 @@ const App: React.FC = () => {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => {
-                // TODO: integrate Stripe/payment link here.
-                // Premium is server-side only — do NOT toggle locally.
-                setIsPremiumModalOpen(false);
-                window.open('mailto:support@asmrwithmapa.com?subject=Premium%20Subscription', '_blank');
-              }}
-              className="w-full py-5 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-bold text-xl rounded-[1.5rem] shadow-[0_10px_30px_rgba(236,72,153,0.3)] hover:shadow-pink-200 transition-all active:scale-95"
-            >
-              {prefs.isPremiumUser ? '✓ Premium Active' : 'Get Premium — $4.99/mo'}
-            </button>
+            {offerings.length > 0 ? (
+              <div className="space-y-3">
+                {offerings[0].availablePackages.map((pkg: any) => (
+                  <button
+                    key={pkg.identifier}
+                    onClick={() => handlePurchase(pkg)}
+                    className="w-full py-4 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-bold text-lg rounded-[1.5rem] shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+                  >
+                    {pkg.product.title} — {pkg.product.priceString}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsPremiumModalOpen(false);
+                  window.open('https://asmrwithmapa.co.uk', '_blank');
+                }}
+                className="w-full py-5 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-bold text-xl rounded-[1.5rem] shadow-[0_10px_30px_rgba(236,72,153,0.3)] hover:shadow-pink-200 transition-all active:scale-95"
+              >
+                {prefs.isPremiumUser ? '✓ Premium Active' : 'Get Premium — $4.99/mo'}
+              </button>
+            )}
             <button onClick={() => setIsPremiumModalOpen(false)} className="text-slate-400 text-sm font-bold hover:text-pink-500 transition-colors uppercase tracking-widest">Maybe Later</button>
           </div>
         </div>

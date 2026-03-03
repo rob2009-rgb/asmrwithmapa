@@ -11,12 +11,14 @@ interface LogErrorParams {
 
 export const logError = async ({ message, error, severity = 'error', context = {} }: LogErrorParams) => {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Use getSession for immediate check, then attempt getUser if possible
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id || null;
 
         const stackTrace = error?.stack || (typeof error === 'object' ? JSON.stringify(error) : String(error));
 
         const { error: dbError } = await supabase.from('error_logs').insert([{
-            user_id: user?.id || null,
+            user_id: userId,
             error_message: message,
             stack_trace: stackTrace,
             severity,

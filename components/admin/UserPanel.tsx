@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Shield, UserCheck, Trash2, Search, Loader, ShieldAlert, Plus, X, Lock, AlertTriangle, FileText, CheckSquare, Square, RotateCcw, Ban, Key, CreditCard, Activity, MoreVertical, LogOut, Clock } from 'lucide-react';
+import { Users, Shield, UserCheck, Trash2, Search, Loader, ShieldAlert, Plus, X, Lock, AlertTriangle, FileText, CheckSquare, Square, RotateCcw, Ban, Key, CreditCard, Activity, MoreVertical, LogOut, Clock, Sparkles, ShieldCheck, Send } from 'lucide-react';
 import { supabase } from '../../src/supabaseClient';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../../src/db_types';
@@ -9,6 +9,9 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useNotification } from '../../src/contexts/NotificationContext';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
+
+// Module-level cache to prevent "Multiple GoTrueClient instances" warning
+let cachedAdminClient: SupabaseClient | null = null;
 
 const UserPanel: React.FC = () => {
     const { showNotification } = useNotification();
@@ -72,10 +75,6 @@ const UserPanel: React.FC = () => {
             const profile = await getCurrentProfile();
             if (profile) {
                 setCurrentUserRole(profile.role);
-                // Fetch permissions for this role
-                // Note: The role_permissions table might not have an RLS policy that lets us read if we are not admin, 
-                // but usually public read is fine for permissions or we rely on the profile role constant map in frontend.
-                // However, following the plan, we fetch from DB.
                 const { data: permData } = await supabase
                     .from('role_permissions')
                     .select('permission_code')
@@ -119,6 +118,8 @@ const UserPanel: React.FC = () => {
     };
 
     const getAdminClient = async (): Promise<SupabaseClient> => {
+        if (cachedAdminClient) return cachedAdminClient;
+
         const { data: setting } = await supabase
             .from('system_settings')
             .select('value')
@@ -128,9 +129,14 @@ const UserPanel: React.FC = () => {
         const serviceKey = (setting as any)?.value;
         if (!serviceKey) throw new Error("Missing 'supabase_service_role_key'");
 
-        return createClient<Database>(import.meta.env.VITE_SUPABASE_URL, serviceKey, {
-            auth: { autoRefreshToken: false, persistSession: false }
+        cachedAdminClient = createClient<Database>(import.meta.env.VITE_SUPABASE_URL, serviceKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
         });
+
+        return cachedAdminClient;
     };
 
     const handlePasswordReset = (email: string) => {
@@ -449,6 +455,20 @@ const UserPanel: React.FC = () => {
         });
     };
 
+    const handleResendInvite = async (email: string) => {
+        if (!email) return;
+        try {
+            const admin = await getAdminClient();
+            const { error } = await admin.auth.admin.inviteUserByEmail(email);
+            if (error) throw error;
+
+            await logAction('RESEND_INVITE', 'user', { email });
+            showNotification('success', `Invitation resent to ${email}`);
+        } catch (error: any) {
+            showNotification('error', 'Failed to resend invite: ' + error.message);
+        }
+    };
+
     const handleBulkDelete = () => {
         if (selectedUserIds.size === 0) return;
         if (!hasPermission('USER_DELETE')) return showNotification('error', "Permission Denied");
@@ -628,10 +648,16 @@ const UserPanel: React.FC = () => {
                                             </div>
                                             <div>
                                                 <div className="font-bold text-slate-200 flex items-center gap-2">
-                                                    {user.full_name || user.email || '<No Email>'}
+                                                    {user.subscription_tier === 'mapa' && <Sparkles size={14} className="text-pink-400 animate-pulse" />}
+                                                    {user.subscription_tier === 'staff' && <ShieldCheck size={14} className="text-indigo-400" />}
+                                                    {user.full_name || (user.subscription_tier === 'mapa' || user.subscription_tier === 'staff' ? '*** Confidential ***' : user.email) || '<No Email>'}
                                                     {user.deleted_at && <span className="text-[10px] bg-red-500/20 text-red-400 px-1 py-0.5 rounded border border-red-500/30">DELETED</span>}
                                                 </div>
-                                                <div className="text-xs text-slate-500 font-mono">{user.email}</div>
+                                                <div className="text-xs text-slate-500 font-mono">
+                                                    {user.subscription_tier === 'mapa' || user.subscription_tier === 'staff'
+                                                        ? `${user.email?.[0]}***@***.com`
+                                                        : user.email}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -681,7 +707,10 @@ const UserPanel: React.FC = () => {
                                                 {activeActionId === user.id && (
                                                     <div className="absolute right-8 top-8 z-50 w-48 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 fade-in">
                                                         <div className="py-1">
-                                                            <button onClick={() => handlePasswordReset(user.email || '')} className="flex items-center gap-2 px-4 py-2 text-xs w-full hover:bg-slate-800 text-slate-300">
+                                                            <button onClick={() => { handleResendInvite(user.email || ''); setActiveActionId(null); }} className="flex items-center gap-2 px-4 py-2 text-xs w-full hover:bg-slate-800 text-slate-300">
+                                                                <Send size={14} /> Resend Invitation
+                                                            </button>
+                                                            <button onClick={() => { handlePasswordReset(user.email || ''); setActiveActionId(null); }} className="flex items-center gap-2 px-4 py-2 text-xs w-full hover:bg-slate-800 text-slate-300">
                                                                 <Key size={14} /> Send Password Reset
                                                             </button>
                                                             <button onClick={() => openTierModal(user)} className="flex items-center gap-2 px-4 py-2 text-xs w-full hover:bg-slate-800 text-slate-300">
@@ -769,6 +798,8 @@ const UserPanel: React.FC = () => {
                                 <option value="free">Free</option>
                                 <option value="paid">Paid (Standard)</option>
                                 <option value="premium">Premium (VIP)</option>
+                                <option value="mapa">MAPA (The Star)</option>
+                                <option value="staff">Staff Member</option>
                             </select>
 
                             <div className="flex gap-3">

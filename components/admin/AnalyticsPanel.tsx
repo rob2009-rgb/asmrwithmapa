@@ -2,12 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../src/supabaseClient';
 import { BarChart3, Users, Clock, MonitorSmartphone, TrendingUp, Activity, Globe } from 'lucide-react';
 
+const PATH_MAP: Record<string, string> = {
+    '/': 'Landing Page',
+    '/app': 'Main Sanctuary',
+    '/privacy': 'Privacy Policy',
+    '/terms': 'Terms of Service'
+};
+
+const getFriendlyPath = (path: string) => PATH_MAP[path] || path;
+
 export default function AnalyticsPanel() {
     const [stats, setStats] = useState({
         totalSessions: 0,
         avgDurationSec: 0,
         mobilePercent: 0,
-        totalEvents: 0
+        totalEvents: 0, // Discrete interactions (clicks, views, etc)
+        uniqueVisitors: 0,
+        landingViews: 0,
+        landingSignups: 0,
+        conversionRate: 0
     });
 
     const [recentEvents, setRecentEvents] = useState<any[]>([]);
@@ -28,7 +41,7 @@ export default function AnalyticsPanel() {
             const { data: sessions, error: sessionErr } = await (supabase as any)
                 .from('analytics_sessions')
                 .select('*')
-                .order('created_at', { ascending: false })
+                .order('started_at', { ascending: false })
                 .limit(1000);
 
             if (sessions && !sessionErr) {
@@ -36,12 +49,12 @@ export default function AnalyticsPanel() {
                 const totalDuration = sessions.reduce((acc: number, s: any) => acc + (s.duration_seconds || 0), 0);
                 const mobileCount = sessions.filter((s: any) => s.device_type === 'mobile').length;
 
-                setStats({
+                setStats(prev => ({
+                    ...prev,
                     totalSessions: total,
                     avgDurationSec: total > 0 ? Math.round(totalDuration / total) : 0,
-                    mobilePercent: total > 0 ? Math.round((mobileCount / total) * 100) : 0,
-                    totalEvents: 0 // Will load below
-                });
+                    mobilePercent: total > 0 ? Math.round((mobileCount / total) * 100) : 0
+                }));
             }
 
             // Load recent events for aggregation and stream
@@ -53,20 +66,59 @@ export default function AnalyticsPanel() {
 
             if (events && !eventErr) {
                 setAllEvents(events);
-                setStats(prev => ({ ...prev, totalEvents: events.length }));
+
+                // Calculate Landing Page Metrics
+                const landingEventFilter = (e: any) => e.event_type === 'view' && (e.feature_name === 'landing_page' || e.metadata?.path === '/');
+                const landingEvents = events.filter(landingEventFilter);
+                const landingSessionIds = new Set(landingEvents.map(e => e.session_id));
+
+                // Get unique fingerprints for those sessions (defensive check for sessions)
+                const landingFingerprints = new Set(
+                    (sessions || [])
+                        .filter((s: any) => landingSessionIds.has(s.id))
+                        .map((s: any) => s.session_fingerprint)
+                );
+
+                // Calculate Signups & Conversion Rate
+                const signupEvents = events.filter(e => e.event_type === 'conversion' && e.feature_name === 'waitlist_signup');
+                const uniqueVisitorsCount = landingFingerprints.size;
+                const signupsCount = signupEvents.length;
+                const conversionRate = uniqueVisitorsCount > 0
+                    ? ((signupsCount / uniqueVisitorsCount) * 100).toFixed(1)
+                    : '0';
+
+                // We filter out heartbeats for "Total Events" to show meaningful user actions
+                const nonHeartbeatEvents = events.filter(e => e.event_type !== 'heartbeat');
+
+                setStats(prev => ({
+                    ...prev,
+                    totalEvents: nonHeartbeatEvents.length,
+                    uniqueVisitors: uniqueVisitorsCount,
+                    landingViews: landingEvents.length,
+                    landingSignups: signupsCount,
+                    conversionRate: parseFloat(conversionRate)
+                }));
 
                 // Aggregate top features
                 const featureCounts: Record<string, number> = {};
-                const pageCounts: Record<string, number> = {};
+                const pageUniqueVisitors: Record<string, Set<string>> = {};
 
                 events.forEach((evt: any) => {
                     const feature = evt.feature_name;
-                    if (feature) {
+                    if (feature && evt.event_type !== 'heartbeat') {
                         featureCounts[feature] = (featureCounts[feature] || 0) + 1;
                     }
                     const path = evt.metadata?.path;
                     if (path) {
-                        pageCounts[path] = (pageCounts[path] || 0) + 1;
+                        const friendlyName = getFriendlyPath(path);
+                        if (!pageUniqueVisitors[friendlyName]) {
+                            pageUniqueVisitors[friendlyName] = new Set();
+                        }
+                        // Associate event with session fingerprint for unique page counts
+                        const session = (sessions || []).find((s: any) => s.id === evt.session_id);
+                        if (session?.session_fingerprint) {
+                            pageUniqueVisitors[friendlyName].add(session.session_fingerprint);
+                        }
                     }
                 });
 
@@ -75,8 +127,8 @@ export default function AnalyticsPanel() {
                     .sort((a, b) => b.count - a.count)
                     .slice(0, 5);
 
-                const sortedPages = Object.entries(pageCounts)
-                    .map(([path, count]) => ({ path, count }))
+                const sortedPages = Object.entries(pageUniqueVisitors)
+                    .map(([path, fingerprints]) => ({ path, count: fingerprints.size }))
                     .sort((a, b) => b.count - a.count)
                     .slice(0, 5);
 
@@ -127,7 +179,7 @@ export default function AnalyticsPanel() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     icon={<Users size={20} className="text-blue-400" />}
-                    label="Total Sessions (Sample)"
+                    label="Active Sessions"
                     value={stats.totalSessions.toString()}
                 />
                 <StatCard
@@ -142,8 +194,31 @@ export default function AnalyticsPanel() {
                 />
                 <StatCard
                     icon={<TrendingUp size={20} className="text-pink-400" />}
-                    label="Tracked Events"
+                    label="Total Interactions"
                     value={stats.totalEvents.toString()}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                    icon={<Globe size={20} className="text-cyan-400" />}
+                    label="Unique Visitors (Landing)"
+                    value={stats.uniqueVisitors.toString()}
+                />
+                <StatCard
+                    icon={<TrendingUp size={20} className="text-orange-400" />}
+                    label="Total Landing Views"
+                    value={stats.landingViews.toString()}
+                />
+                <StatCard
+                    icon={<Users size={20} className="text-emerald-400" />}
+                    label="Landing Signups"
+                    value={stats.landingSignups.toString()}
+                />
+                <StatCard
+                    icon={<Activity size={20} className="text-pink-400" />}
+                    label="Conversion Rate"
+                    value={`${stats.conversionRate}%`}
                 />
             </div>
 
@@ -163,20 +238,32 @@ export default function AnalyticsPanel() {
                     </div>
 
                     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Top Pages</h3>
+                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Popular Pages (Unique)</h3>
                         <div className="space-y-3">
                             {topPages.length === 0 ? <p className="text-xs text-slate-500">No page data.</p> : topPages.map((p, i) => (
                                 <div key={i} className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
-                                    <span className="text-sm font-mono text-slate-300 truncate pr-2">{p.path}</span>
+                                    <span className="text-sm font-bold text-slate-300 truncate pr-2">{p.path}</span>
                                     <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs font-bold shrink-0">{p.count}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
+
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Activity size={16} className="text-slate-500" />
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">What are "Pings"?</h3>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                            Engagement Pings (Heartbeats) are background signals sent by the app every 1 minute.
+                            They confirm a user is still active, allowing us to accurately calculate <strong>Session Duration</strong> without
+                            using intrusive tracking.
+                        </p>
+                    </div>
                 </div>
 
                 {/* Event Stream */}
-                <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col h-[600px]">
+                <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col h-[650px]">
                     <div className="flex justify-between items-center mb-6 shrink-0">
                         <h3 className="text-xl font-bold flex items-center gap-2">
                             <Globe className="text-slate-400" /> Activity Stream
@@ -186,12 +273,13 @@ export default function AnalyticsPanel() {
                             onChange={(e) => setFilterType(e.target.value)}
                             className="bg-slate-950 border border-slate-800 text-slate-300 text-sm rounded-lg p-2 outline-none"
                         >
-                            <option value="all">All Events</option>
-                            <option value="view">Views</option>
-                            <option value="click">Clicks</option>
-                            <option value="conversion">Conversions</option>
-                            <option value="error">Errors</option>
-                            <option value="consent">Consent</option>
+                            <option value="all">Detailed Timeline</option>
+                            <option value="view">Views Only</option>
+                            <option value="click">Clicks Only</option>
+                            <option value="conversion">Signups Only</option>
+                            <option value="error">Errors Only</option>
+                            <option value="consent">Consent Events</option>
+                            <option value="heartbeat">Pings Only</option>
                         </select>
                     </div>
 
@@ -209,10 +297,10 @@ export default function AnalyticsPanel() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-bold text-white truncate">
-                                            {evt.feature_name || 'System'}
+                                            {evt.event_type === 'heartbeat' ? 'Engagement Ping' : (evt.feature_name || 'System')}
                                         </p>
                                         <p className="text-xs text-slate-500 truncate">
-                                            ID: {evt.session_id?.substring(0, 8)}... | Path: {evt.metadata?.path || 'N/A'}
+                                            Session: {evt.session_id?.substring(0, 8)} | Page: {getFriendlyPath(evt.metadata?.path || 'N/A')}
                                         </p>
                                     </div>
                                     {evt.metadata?.active_experiments && evt.metadata.active_experiments !== 'none' && (
@@ -249,11 +337,15 @@ function EventTypeBadge({ type }: { type: string }) {
         case 'error':
             return <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-1 rounded text-xs font-bold uppercase">Error</span>;
         case 'conversion':
-            return <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-bold uppercase">Goal</span>;
+            return <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-bold uppercase">Signup</span>;
         case 'consent':
             return <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-xs font-bold uppercase">Consent</span>;
         case 'click':
-            return <span className="bg-slate-800 text-slate-300 border border-slate-700 px-2 py-1 rounded text-xs font-bold uppercase">Click</span>;
+            return <span className="bg-slate-800 text-slate-300 border border-slate-700 px-2 py-1 rounded text-xs font-bold uppercase">Interact</span>;
+        case 'heartbeat':
+            return <span className="bg-slate-800 text-slate-500 border border-slate-700 px-2 py-1 rounded text-xs font-bold uppercase">Ping</span>;
+        case 'view':
+            return <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded text-xs font-bold uppercase">View</span>;
         default:
             return <span className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded text-xs font-bold uppercase">{type}</span>;
     }
